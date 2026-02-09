@@ -14,7 +14,211 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      couples: {
+        Row: {
+          anniversary_date: string | null
+          created_at: string
+          id: string
+        }
+        Insert: {
+          anniversary_date?: string | null
+          created_at?: string
+          id?: string
+        }
+        Update: {
+          anniversary_date?: string | null
+          created_at?: string
+          id?: string
+        }
+        Relationships: []
+      }
+      memories: {
+        Row: {
+          couple_id: string
+          created_at: string
+          created_by: string
+          date: string
+          emoji: string | null
+          id: string
+          image_url: string | null
+          title: string
+        }
+        Insert: {
+          couple_id: string
+          created_at?: string
+          created_by: string
+          date?: string
+          emoji?: string | null
+          id?: string
+          image_url?: string | null
+          title: string
+        }
+        Update: {
+          couple_id?: string
+          created_at?: string
+          created_by?: string
+          date?: string
+          emoji?: string | null
+          id?: string
+          image_url?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "memories_couple_id_fkey"
+            columns: ["couple_id"]
+            isOneToOne: false
+            referencedRelation: "couples"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      messages: {
+        Row: {
+          content: string
+          couple_id: string
+          created_at: string
+          id: string
+          sender_id: string
+        }
+        Insert: {
+          content: string
+          couple_id: string
+          created_at?: string
+          id?: string
+          sender_id: string
+        }
+        Update: {
+          content?: string
+          couple_id?: string
+          created_at?: string
+          id?: string
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_couple_id_fkey"
+            columns: ["couple_id"]
+            isOneToOne: false
+            referencedRelation: "couples"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      moods: {
+        Row: {
+          couple_id: string
+          created_at: string
+          emoji: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          couple_id: string
+          created_at?: string
+          emoji: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          couple_id?: string
+          created_at?: string
+          emoji?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "moods_couple_id_fkey"
+            columns: ["couple_id"]
+            isOneToOne: false
+            referencedRelation: "couples"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notes: {
+        Row: {
+          content: string
+          couple_id: string
+          created_at: string
+          created_by: string
+          id: string
+          pinned: boolean | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          content: string
+          couple_id: string
+          created_at?: string
+          created_by: string
+          id?: string
+          pinned?: boolean | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          content?: string
+          couple_id?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          pinned?: boolean | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notes_couple_id_fkey"
+            columns: ["couple_id"]
+            isOneToOne: false
+            referencedRelation: "couples"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_emoji: string | null
+          couple_id: string | null
+          created_at: string
+          display_name: string
+          id: string
+          partner_code: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_emoji?: string | null
+          couple_id?: string | null
+          created_at?: string
+          display_name: string
+          id?: string
+          partner_code?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_emoji?: string | null
+          couple_id?: string | null
+          created_at?: string
+          display_name?: string
+          id?: string
+          partner_code?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_profiles_couple"
+            columns: ["couple_id"]
+            isOneToOne: false
+            referencedRelation: "couples"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
