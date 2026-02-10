@@ -1,18 +1,80 @@
 import { useState, useEffect } from "react";
-import { Heart, Calendar, Clock, LogOut, Link } from "lucide-react";
+import { Heart, Calendar, Clock, LogOut, Link, Bell, BellOff } from "lucide-react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { usePushNotifications } from "@/hooks/usePushNotifications";
 import heroImage from "@/assets/hero-couple.jpg";
 
 const Index = () => {
   const { user, profile, partner, signOut } = useAuth();
   const navigate = useNavigate();
   const [moodSent, setMoodSent] = useState(false);
+  const { isSupported, permission, requestPermission, sendLocalNotification } =
+    usePushNotifications();
 
-  // Calculate days together
-  const daysInLove = profile?.couple_id ? 1 : 0;
+  // Listen for partner's moods in realtime
+  useEffect(() => {
+    if (!profile?.couple_id || !user) return;
+
+    const channel = supabase
+      .channel("moods-realtime")
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "moods",
+          filter: `couple_id=eq.${profile.couple_id}`,
+        },
+        (payload) => {
+          const mood = payload.new as { user_id: string; emoji: string };
+          if (mood.user_id !== user.id) {
+            sendLocalNotification(
+              `${partner?.display_name || "Your love"} is feeling ${mood.emoji}`,
+              "Open LoveSync to see their mood 💕"
+            );
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [profile?.couple_id, user, partner, sendLocalNotification]);
+
+  // Listen for new messages
+  useEffect(() => {
+    if (!profile?.couple_id || !user) return;
+
+    const channel = supabase
+      .channel("messages-notify")
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "messages",
+          filter: `couple_id=eq.${profile.couple_id}`,
+        },
+        (payload) => {
+          const msg = payload.new as { sender_id: string; content: string };
+          if (msg.sender_id !== user.id) {
+            sendLocalNotification(
+              `${partner?.display_name || "Your love"} 💬`,
+              msg.content.substring(0, 100)
+            );
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [profile?.couple_id, user, partner, sendLocalNotification]);
 
   const sendMood = async (emoji: string) => {
     if (!profile?.couple_id || !user) return;
@@ -70,8 +132,22 @@ const Index = () => {
 
   return (
     <div className="flex flex-col pb-20">
-      {/* Header with logout */}
-      <div className="absolute top-4 right-4 z-10">
+      {/* Header with logout & notifications */}
+      <div className="absolute top-4 right-4 z-10 flex items-center gap-2">
+        {isSupported && permission !== "granted" && (
+          <button
+            onClick={requestPermission}
+            className="p-2 rounded-full bg-white/20 backdrop-blur-sm"
+            title="Enable notifications"
+          >
+            <BellOff className="w-5 h-5 text-white" />
+          </button>
+        )}
+        {permission === "granted" && (
+          <div className="p-2 rounded-full bg-white/20 backdrop-blur-sm">
+            <Bell className="w-5 h-5 text-white" />
+          </div>
+        )}
         <button
           onClick={handleLogout}
           className="p-2 rounded-full bg-white/20 backdrop-blur-sm"
@@ -147,6 +223,29 @@ const Index = () => {
           </p>
         </motion.div>
       </div>
+
+      {/* Notification prompt banner */}
+      {isSupported && permission === "default" && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+          className="px-5 mt-4"
+        >
+          <button
+            onClick={requestPermission}
+            className="w-full bg-card rounded-2xl p-4 shadow-soft border border-primary/20 flex items-center gap-3 text-left"
+          >
+            <div className="w-10 h-10 gradient-rose rounded-full flex items-center justify-center flex-shrink-0">
+              <Bell className="w-5 h-5 text-primary-foreground" />
+            </div>
+            <div>
+              <p className="font-semibold text-sm text-card-foreground">Enable Notifications</p>
+              <p className="text-xs text-muted-foreground">Get notified when your partner sends love 💕</p>
+            </div>
+          </button>
+        </motion.div>
+      )}
 
       {/* Mood */}
       <div className="px-5 mt-6">
