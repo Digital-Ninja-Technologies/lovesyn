@@ -142,7 +142,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // Find partner by code
     const { data: partnerProfile, error: findError } = await supabase
       .from("profiles")
-      .select("*")
+      .select("user_id, couple_id, display_name")
       .eq("partner_code", partnerCode.toUpperCase())
       .single();
 
@@ -154,34 +154,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       return { error: new Error("You cannot connect with yourself") };
     }
 
-    if (partnerProfile.couple_id) {
-      return { error: new Error("Partner is already connected") };
-    }
+    // Use secure database function to connect both profiles
+    const { error: connectError } = await supabase.rpc("connect_partners", {
+      current_user_id: user.id,
+      partner_user_id: partnerProfile.user_id,
+    });
 
-    // Create couple
-    const { data: couple, error: coupleError } = await supabase
-      .from("couples")
-      .insert({})
-      .select()
-      .single();
-
-    if (coupleError || !couple) {
-      return { error: coupleError || new Error("Failed to create couple") };
-    }
-
-    // Update both profiles
-    const { error: updateError1 } = await supabase
-      .from("profiles")
-      .update({ couple_id: couple.id })
-      .eq("user_id", user.id);
-
-    const { error: updateError2 } = await supabase
-      .from("profiles")
-      .update({ couple_id: couple.id })
-      .eq("user_id", partnerProfile.user_id);
-
-    if (updateError1 || updateError2) {
-      return { error: updateError1 || updateError2 };
+    if (connectError) {
+      return { error: new Error(connectError.message) };
     }
 
     await refreshProfile();
