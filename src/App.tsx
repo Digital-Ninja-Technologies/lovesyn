@@ -58,11 +58,7 @@ const AppRoutes = () => {
     <Routes>
       <Route
         path="/landing"
-        element={
-          <AuthRoute>
-            <Landing />
-          </AuthRoute>
-        }
+        element={<Landing />}
       />
       <Route
         path="/auth"
