@@ -11,6 +11,7 @@ import Memories from "./pages/Memories";
 import Notes from "./pages/Notes";
 import Dates from "./pages/Dates";
 import Auth from "./pages/Auth";
+import Landing from "./pages/Landing";
 import ConnectPartner from "./pages/ConnectPartner";
 import NotFound from "./pages/NotFound";
 
@@ -28,7 +29,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   }
 
   if (!user) {
-    return <Navigate to="/auth" replace />;
+    return <Navigate to="/landing" replace />;
   }
 
   return <>{children}</>;
@@ -55,6 +56,14 @@ const AuthRoute = ({ children }: { children: React.ReactNode }) => {
 const AppRoutes = () => {
   return (
     <Routes>
+      <Route
+        path="/landing"
+        element={
+          <AuthRoute>
+            <Landing />
+          </AuthRoute>
+        }
+      />
       <Route
         path="/auth"
         element={
