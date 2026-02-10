@@ -224,7 +224,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      connect_partners: {
+        Args: { current_user_id: string; partner_user_id: string }
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never
