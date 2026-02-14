@@ -178,7 +178,9 @@ const Chat = () => {
               read_at={msg.read_at}
               isMe={msg.sender_id === user?.id}
               userId={user?.id || ""}
+              coupleId={profile.couple_id!}
               reactions={reactions.filter((r) => r.message_id === msg.id)}
+              onDeleted={(deletedId) => setMessages((prev) => prev.filter((m) => m.id !== deletedId))}
             />
           ))}
         </AnimatePresence>
