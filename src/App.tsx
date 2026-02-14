@@ -13,6 +13,7 @@ import Dates from "./pages/Dates";
 import Auth from "./pages/Auth";
 import Landing from "./pages/Landing";
 import ConnectPartner from "./pages/ConnectPartner";
+import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -128,6 +129,7 @@ const AppRoutes = () => {
           </ProtectedRoute>
         }
       />
+      <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
