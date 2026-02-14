@@ -56,7 +56,24 @@ const Memories = () => {
         .eq("couple_id", profile.couple_id)
         .order("date", { ascending: false });
 
-      if (data) setMemories(data);
+      if (data) {
+        // Resolve signed URLs for memories with images
+        const memoriesWithSignedUrls = await Promise.all(
+          data.map(async (memory) => {
+            if (memory.image_url) {
+              const path = memory.image_url.split("/memories/")[1];
+              if (path) {
+                const { data: signedData } = await supabase.storage
+                  .from("memories")
+                  .createSignedUrl(path, 3600);
+                return { ...memory, image_url: signedData?.signedUrl || null };
+              }
+            }
+            return memory;
+          })
+        );
+        setMemories(memoriesWithSignedUrls);
+      }
     };
 
     fetchMemories();
@@ -87,7 +104,7 @@ const Memories = () => {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  const uploadPhoto = async (file: File): Promise<string | null> => {
+  const uploadPhoto = async (file: File): Promise<{ url: string; path: string } | null> => {
     const ext = file.name.split(".").pop();
     const path = `${profile!.couple_id}/${Date.now()}.${ext}`;
 
@@ -100,11 +117,17 @@ const Memories = () => {
       return null;
     }
 
+    // Get a signed URL for display
+    const { data: signedData } = await supabase.storage
+      .from("memories")
+      .createSignedUrl(path, 3600);
+
+    // Store the public URL pattern in DB (for path extraction later)
     const { data: urlData } = supabase.storage
       .from("memories")
       .getPublicUrl(path);
 
-    return urlData.publicUrl;
+    return { url: urlData.publicUrl, path };
   };
 
   const addMemory = async () => {
@@ -112,13 +135,21 @@ const Memories = () => {
     setLoading(true);
 
     let imageUrl: string | null = null;
+    let signedImageUrl: string | null = null;
     if (selectedFile) {
-      imageUrl = await uploadPhoto(selectedFile);
-      if (!imageUrl) {
+      const result = await uploadPhoto(selectedFile);
+      if (!result) {
         toast({ title: "Failed to upload photo", variant: "destructive" });
         setLoading(false);
         return;
       }
+      imageUrl = result.url;
+      // Get signed URL for immediate display
+      const path = `${profile.couple_id}/${result.path.split("/").pop()}`;
+      const { data: signedData } = await supabase.storage
+        .from("memories")
+        .createSignedUrl(path, 3600);
+      signedImageUrl = signedData?.signedUrl || null;
     }
 
     const { data, error } = await supabase
@@ -137,7 +168,8 @@ const Memories = () => {
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else if (data) {
-      setMemories((prev) => [data, ...prev]);
+      // Use signed URL for display
+      setMemories((prev) => [{ ...data, image_url: signedImageUrl || data.image_url }, ...prev]);
       setTitle("");
       setEmoji("💕");
       clearFile();
