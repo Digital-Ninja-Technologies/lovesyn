@@ -265,6 +265,7 @@ export type Database = {
         Args: { requesting_user_id: string }
         Returns: undefined
       }
+      get_my_couple_id: { Args: never; Returns: string }
       lookup_partner_by_code: { Args: { code: string }; Returns: Json }
     }
     Enums: {
