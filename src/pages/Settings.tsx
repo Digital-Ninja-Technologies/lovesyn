@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, Camera, Loader2, Check, ImagePlus, Download, Unlink } from "lucide-react";
+import { ArrowLeft, Camera, Loader2, Check, ImagePlus, Download, Unlink, LogOut } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -23,7 +23,7 @@ import { useInstallPWA } from "@/hooks/useInstallPWA";
 const EMOJI_OPTIONS = ["💕", "😍", "🥰", "😊", "🦋", "🌸", "🔥", "⭐", "🌙", "🎀", "💜", "🧸"];
 
 const Settings = () => {
-  const { user, profile, partner, couplePicUrl, refreshProfile, disconnectPartner } = useAuth();
+  const { user, profile, partner, couplePicUrl, refreshProfile, disconnectPartner, signOut } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const { isInstallable, isInstalled, install } = useInstallPWA();
@@ -257,6 +257,25 @@ const Settings = () => {
         >
           {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <><Check className="w-5 h-5 mr-2" />Save Changes</>}
         </Button>
+
+        {/* Sign Out */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6 }}
+          className="mt-6"
+        >
+          <Button
+            variant="outline"
+            onClick={async () => {
+              await signOut();
+              navigate("/landing");
+            }}
+            className="w-full h-12 rounded-xl font-semibold text-muted-foreground"
+          >
+            <LogOut className="w-5 h-5 mr-2" /> Sign Out
+          </Button>
+        </motion.div>
       </div>
     </div>
   );
