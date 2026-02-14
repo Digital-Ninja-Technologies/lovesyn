@@ -70,7 +70,7 @@ const ConnectPartner = () => {
           transition={{ delay: 0.1 }}
           className="bg-card rounded-3xl p-6 shadow-soft border border-border mb-6"
         >
-          <p className="text-sm text-muted-foreground mb-2">Your partner code</p>
+          <p className="text-sm text-muted-foreground mb-2">My code</p>
           <div className="flex items-center gap-3">
             <div className="flex-1 bg-secondary rounded-xl px-4 py-3 font-mono text-2xl font-bold text-foreground tracking-widest text-center">
               {profile?.partner_code || "------"}
