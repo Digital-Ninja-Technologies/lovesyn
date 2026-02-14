@@ -14,6 +14,7 @@ import Auth from "./pages/Auth";
 import Landing from "./pages/Landing";
 import ConnectPartner from "./pages/ConnectPartner";
 import ResetPassword from "./pages/ResetPassword";
+import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -125,6 +126,16 @@ const AppRoutes = () => {
           <ProtectedRoute>
             <AppLayout>
               <Dates />
+            </AppLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/settings"
+        element={
+          <ProtectedRoute>
+            <AppLayout>
+              <Settings />
             </AppLayout>
           </ProtectedRoute>
         }

@@ -9,6 +9,7 @@ interface Profile {
   avatar_emoji: string;
   partner_code: string;
   couple_id: string | null;
+  profile_pic_url: string | null;
 }
 
 interface Partner {

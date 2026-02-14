@@ -186,6 +186,7 @@ export type Database = {
           display_name: string
           id: string
           partner_code: string | null
+          profile_pic_url: string | null
           updated_at: string
           user_id: string
         }
@@ -196,6 +197,7 @@ export type Database = {
           display_name: string
           id?: string
           partner_code?: string | null
+          profile_pic_url?: string | null
           updated_at?: string
           user_id: string
         }
@@ -206,6 +208,7 @@ export type Database = {
           display_name?: string
           id?: string
           partner_code?: string | null
+          profile_pic_url?: string | null
           updated_at?: string
           user_id?: string
         }
