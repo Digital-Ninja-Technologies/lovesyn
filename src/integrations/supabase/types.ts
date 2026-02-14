@@ -82,6 +82,7 @@ export type Database = {
           couple_id: string
           created_at: string
           id: string
+          read_at: string | null
           sender_id: string
         }
         Insert: {
@@ -89,6 +90,7 @@ export type Database = {
           couple_id: string
           created_at?: string
           id?: string
+          read_at?: string | null
           sender_id: string
         }
         Update: {
@@ -96,6 +98,7 @@ export type Database = {
           couple_id?: string
           created_at?: string
           id?: string
+          read_at?: string | null
           sender_id?: string
         }
         Relationships: [
