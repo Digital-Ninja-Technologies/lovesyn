@@ -1,12 +1,13 @@
 import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, Camera, Loader2, Check, ImagePlus } from "lucide-react";
+import { ArrowLeft, Camera, Loader2, Check, ImagePlus, Download } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
+import { useInstallPWA } from "@/hooks/useInstallPWA";
 
 const EMOJI_OPTIONS = ["💕", "😍", "🥰", "😊", "🦋", "🌸", "🔥", "⭐", "🌙", "🎀", "💜", "🧸"];
 
@@ -14,6 +15,7 @@ const Settings = () => {
   const { user, profile, couplePicUrl, refreshProfile } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { isInstallable, isInstalled, install } = useInstallPWA();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const coupleFileInputRef = useRef<HTMLInputElement>(null);
 
@@ -230,6 +232,29 @@ const Settings = () => {
               onChange={handleCouplePhotoUpload}
               className="hidden"
             />
+          </motion.div>
+        )}
+
+        {/* Install App */}
+        {(isInstallable || isInstalled) && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="bg-card rounded-3xl p-5 shadow-soft border border-border mb-8"
+          >
+            <label className="text-sm text-muted-foreground mb-3 block">Install App</label>
+            {isInstalled ? (
+              <p className="text-sm text-foreground flex items-center gap-2">✅ LoveSync is installed on your device</p>
+            ) : (
+              <Button
+                onClick={install}
+                variant="outline"
+                className="w-full h-12 rounded-xl font-semibold"
+              >
+                <Download className="w-5 h-5 mr-2" /> Add to Home Screen
+              </Button>
+            )}
           </motion.div>
         )}
 

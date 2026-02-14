@@ -102,9 +102,9 @@ const Chat = () => {
   }
 
   return (
-    <div className="flex flex-col h-screen max-h-screen">
-      {/* Header */}
-      <div className="glass border-b border-border px-5 py-4 flex items-center gap-3">
+    <div className="flex flex-col h-[100dvh]">
+      {/* Header - fixed top */}
+      <div className="sticky top-0 z-20 glass border-b border-border px-5 py-4 flex items-center gap-3">
         <div className="w-10 h-10 rounded-full gradient-rose flex items-center justify-center text-lg">
           {partner?.avatar_emoji || "💕"}
         </div>
@@ -116,7 +116,7 @@ const Chat = () => {
         </div>
       </div>
 
-      {/* Messages */}
+      {/* Messages - scrollable middle */}
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
         <AnimatePresence>
           {messages.map((msg) => {
@@ -151,8 +151,8 @@ const Chat = () => {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input */}
-      <div className="glass border-t border-border px-4 py-3 safe-bottom">
+      {/* Input - fixed above bottom nav */}
+      <div className="sticky bottom-16 z-20 glass border-t border-border px-4 py-3">
         <div className="flex items-center gap-2 bg-secondary rounded-full px-4 py-2">
           <input
             type="text"
