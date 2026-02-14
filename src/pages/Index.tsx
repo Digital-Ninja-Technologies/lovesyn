@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Heart, Calendar, Clock, LogOut, Link, Bell, BellOff } from "lucide-react";
+import { Heart, Calendar, Clock, LogOut, Link, Bell, BellOff, Settings } from "lucide-react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -132,8 +132,15 @@ const Index = () => {
 
   return (
     <div className="flex flex-col pb-20">
-      {/* Header with logout & notifications */}
+      {/* Header with settings, notifications & logout */}
       <div className="absolute top-4 right-4 z-10 flex items-center gap-2">
+        <button
+          onClick={() => navigate("/settings")}
+          className="p-2 rounded-full bg-white/20 backdrop-blur-sm"
+          title="Profile settings"
+        >
+          <Settings className="w-5 h-5 text-white" />
+        </button>
         {isSupported && permission !== "granted" && (
           <button
             onClick={requestPermission}
@@ -159,8 +166,8 @@ const Index = () => {
       {/* Hero Section */}
       <div className="relative h-72 overflow-hidden">
         <img
-          src={heroImage}
-          alt="Couple silhouette"
+          src={profile?.profile_pic_url || heroImage}
+          alt="Profile hero"
           className="absolute inset-0 w-full h-full object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-background" />
