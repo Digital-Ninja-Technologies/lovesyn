@@ -4,6 +4,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import heroImage from "@/assets/hero-couple.jpg";
 import { supabase } from "@/integrations/supabase/client";
+import { useUnread } from "@/contexts/UnreadContext";
+import { usePushNotifications } from "@/hooks/usePushNotifications";
 
 interface Message {
   id: string;
@@ -17,11 +19,21 @@ const Chat = () => {
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
   const { user, profile, partner, couplePicUrl } = useAuth();
+  const { markAsRead } = useUnread();
+  const { sendLocalNotification } = usePushNotifications();
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
+
+  // Mark messages as read when entering chat
+  useEffect(() => {
+    markAsRead();
+    return () => {
+      markAsRead();
+    };
+  }, [markAsRead]);
 
   useEffect(() => {
     if (!profile?.couple_id) return;
@@ -51,7 +63,19 @@ const Chat = () => {
           filter: `couple_id=eq.${profile.couple_id}`,
         },
         (payload) => {
-          setMessages((prev) => [...prev, payload.new as Message]);
+          const newMsg = payload.new as Message;
+          setMessages((prev) => [...prev, newMsg]);
+
+          // Send notification if message is from partner and page not focused
+          if (newMsg.sender_id !== user?.id) {
+            markAsRead(); // We're on chat page, mark as read
+            if (document.hidden) {
+              sendLocalNotification(
+                `${partner?.display_name || "Your Love"} 💕`,
+                newMsg.content
+              );
+            }
+          }
         }
       )
       .subscribe();

@@ -1,6 +1,8 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { Heart, MessageCircle, Image, StickyNote, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
+import { useUnread } from "@/contexts/UnreadContext";
+import { Badge } from "@/components/ui/badge";
 
 const tabs = [
   { path: "/", icon: Heart, label: "Home" },
@@ -13,12 +15,14 @@ const tabs = [
 const BottomNav = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { unreadCount } = useUnread();
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 glass border-t border-border safe-bottom z-50">
       <div className="flex items-center justify-around h-16 max-w-lg mx-auto px-2">
         {tabs.map((tab) => {
           const isActive = location.pathname === tab.path;
+          const showBadge = tab.path === "/chat" && unreadCount > 0;
           return (
             <button
               key={tab.path}
@@ -32,13 +36,20 @@ const BottomNav = () => {
                   transition={{ type: "spring", stiffness: 400, damping: 30 }}
                 />
               )}
-              <tab.icon
-                className={`w-5 h-5 transition-colors ${
-                  isActive ? "text-primary" : "text-muted-foreground"
-                }`}
-                fill={isActive ? "currentColor" : "none"}
-                strokeWidth={isActive ? 1.5 : 2}
-              />
+              <div className="relative">
+                <tab.icon
+                  className={`w-5 h-5 transition-colors ${
+                    isActive ? "text-primary" : "text-muted-foreground"
+                  }`}
+                  fill={isActive ? "currentColor" : "none"}
+                  strokeWidth={isActive ? 1.5 : 2}
+                />
+                {showBadge && (
+                  <span className="absolute -top-1.5 -right-2.5 min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold px-1 leading-none">
+                    {unreadCount > 99 ? "99+" : unreadCount}
+                  </span>
+                )}
+              </div>
               <span
                 className={`text-[10px] font-medium transition-colors ${
                   isActive ? "text-primary" : "text-muted-foreground"
