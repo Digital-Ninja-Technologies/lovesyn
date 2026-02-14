@@ -1,18 +1,29 @@
 import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, Camera, Loader2, Check, ImagePlus, Download } from "lucide-react";
+import { ArrowLeft, Camera, Loader2, Check, ImagePlus, Download, Unlink } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { useInstallPWA } from "@/hooks/useInstallPWA";
 
 const EMOJI_OPTIONS = ["💕", "😍", "🥰", "😊", "🦋", "🌸", "🔥", "⭐", "🌙", "🎀", "💜", "🧸"];
 
 const Settings = () => {
-  const { user, profile, couplePicUrl, refreshProfile } = useAuth();
+  const { user, profile, partner, couplePicUrl, refreshProfile, disconnectPartner } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const { isInstallable, isInstalled, install } = useInstallPWA();
@@ -190,6 +201,51 @@ const Settings = () => {
                 <Download className="w-5 h-5 mr-2" /> Add to Home Screen
               </Button>
             )}
+          </motion.div>
+        )}
+
+        {/* Disconnect Partner */}
+        {profile?.couple_id && partner && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+            className="bg-card rounded-3xl p-5 shadow-soft border border-destructive/20 mb-8"
+          >
+            <label className="text-sm text-muted-foreground mb-3 block">Partner Connection</label>
+            <p className="text-sm text-foreground mb-3">Connected with <span className="font-semibold">{partner.display_name}</span></p>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive" className="w-full h-12 rounded-xl font-semibold">
+                  <Unlink className="w-5 h-5 mr-2" /> Disconnect Partner
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent className="rounded-2xl">
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Disconnect from {partner.display_name}?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This will unlink your accounts. Shared memories, notes, and messages will no longer be accessible. This action cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel className="rounded-xl">Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    className="rounded-xl bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    onClick={async () => {
+                      const { error } = await disconnectPartner();
+                      if (error) {
+                        toast({ title: "Failed to disconnect", description: error.message, variant: "destructive" });
+                      } else {
+                        toast({ title: "Partner disconnected" });
+                        navigate("/");
+                      }
+                    }}
+                  >
+                    Disconnect
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </motion.div>
         )}
 
