@@ -153,25 +153,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const connectPartner = async (partnerCode: string) => {
     if (!user || !profile) return { error: new Error("Not logged in") };
 
-    // Find partner by code
+    // Find partner by code using secure RPC
     const { data: partnerProfile, error: findError } = await supabase
-      .from("profiles")
-      .select("user_id, couple_id, display_name")
-      .eq("partner_code", partnerCode.toUpperCase())
-      .single();
+      .rpc("lookup_partner_by_code", { code: partnerCode.toUpperCase() });
 
     if (findError || !partnerProfile) {
       return { error: new Error("Partner code not found") };
     }
 
-    if (partnerProfile.user_id === user.id) {
+    const partner = partnerProfile as { user_id: string; couple_id: string | null; display_name: string };
+
+    if (partner.user_id === user.id) {
       return { error: new Error("You cannot connect with yourself") };
     }
 
     // Use secure database function to connect both profiles
     const { error: connectError } = await supabase.rpc("connect_partners", {
       current_user_id: user.id,
-      partner_user_id: partnerProfile.user_id,
+      partner_user_id: partner.user_id,
     });
 
     if (connectError) {
