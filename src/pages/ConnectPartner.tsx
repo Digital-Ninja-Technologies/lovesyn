@@ -10,8 +10,19 @@ const ConnectPartner = () => {
   const [partnerCode, setPartnerCode] = useState("");
   const [copied, setCopied] = useState(false);
   const [loading, setLoading] = useState(false);
-  const { profile, partner, connectPartner, refreshProfile } = useAuth();
+  const { profile, partner, connectPartner, disconnectPartner, refreshProfile } = useAuth();
   const { toast } = useToast();
+
+  const handleDisconnect = async () => {
+    setLoading(true);
+    const { error } = await disconnectPartner();
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Disconnected", description: "You can now connect with someone new." });
+    }
+    setLoading(false);
+  };
 
   const copyCode = async () => {
     if (profile?.partner_code) {
@@ -60,10 +71,19 @@ const ConnectPartner = () => {
           {partner ? (
             <>
               <HeartHandshake className="w-6 h-6 text-primary shrink-0" />
-              <div>
+              <div className="flex-1">
                 <p className="font-semibold text-foreground text-sm">Connected with {partner.display_name} {partner.avatar_emoji}</p>
                 <p className="text-xs text-muted-foreground">You're synced and sharing everything 💕</p>
               </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleDisconnect}
+                disabled={loading}
+                className="text-destructive hover:text-destructive hover:bg-destructive/10 text-xs shrink-0"
+              >
+                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Unlink className="w-3 h-3 mr-1" />Disconnect</>}
+              </Button>
             </>
           ) : (
             <>

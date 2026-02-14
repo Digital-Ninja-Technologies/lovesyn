@@ -255,6 +255,10 @@ export type Database = {
         Args: { current_user_id: string; partner_user_id: string }
         Returns: string
       }
+      disconnect_partner: {
+        Args: { requesting_user_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never

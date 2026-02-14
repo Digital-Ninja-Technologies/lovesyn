@@ -27,6 +27,7 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   connectPartner: (partnerCode: string) => Promise<{ error: Error | null }>;
+  disconnectPartner: () => Promise<{ error: Error | null }>;
   refreshProfile: () => Promise<void>;
 }
 
@@ -168,6 +169,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return { error: null };
   };
 
+  const disconnectPartner = async () => {
+    if (!user) return { error: new Error("Not logged in") };
+
+    const { error } = await supabase.rpc("disconnect_partner", {
+      requesting_user_id: user.id,
+    });
+
+    if (error) return { error: new Error(error.message) };
+
+    setPartner(null);
+    await refreshProfile();
+    return { error: null };
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -180,6 +195,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         signIn,
         signOut,
         connectPartner,
+        disconnectPartner,
         refreshProfile,
       }}
     >
