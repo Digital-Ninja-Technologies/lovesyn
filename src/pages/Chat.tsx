@@ -6,6 +6,7 @@ import heroImage from "@/assets/hero-couple.jpg";
 import { supabase } from "@/integrations/supabase/client";
 import { useUnread } from "@/contexts/UnreadContext";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
+import { useTypingIndicator } from "@/hooks/useTypingIndicator";
 
 interface Message {
   id: string;
@@ -22,6 +23,7 @@ const Chat = () => {
   const { user, profile, partner, couplePicUrl } = useAuth();
   const { markAsRead } = useUnread();
   const { sendLocalNotification } = usePushNotifications();
+  const { partnerIsTyping, sendTyping } = useTypingIndicator();
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -244,6 +246,20 @@ const Chat = () => {
             );
           })}
         </AnimatePresence>
+        {partnerIsTyping && (
+          <motion.div
+            initial={{ opacity: 0, y: 5 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            className="flex justify-start"
+          >
+            <div className="bg-card shadow-soft rounded-2xl rounded-bl-md px-4 py-2.5 flex items-center gap-1">
+              <span className="w-2 h-2 rounded-full bg-muted-foreground/40 animate-bounce" style={{ animationDelay: "0ms" }} />
+              <span className="w-2 h-2 rounded-full bg-muted-foreground/40 animate-bounce" style={{ animationDelay: "150ms" }} />
+              <span className="w-2 h-2 rounded-full bg-muted-foreground/40 animate-bounce" style={{ animationDelay: "300ms" }} />
+            </div>
+          </motion.div>
+        )}
         <div ref={messagesEndRef} />
       </div>
 
@@ -253,7 +269,7 @@ const Chat = () => {
           <input
             type="text"
             value={input}
-            onChange={(e) => setInput(e.target.value)}
+            onChange={(e) => { setInput(e.target.value); sendTyping(); }}
             onKeyDown={(e) => e.key === "Enter" && !sending && sendMessage()}
             placeholder="Type a love message..."
             className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none"
