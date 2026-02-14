@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from "react";
-import { Send, Heart } from "lucide-react";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { Send, Heart, Check, CheckCheck } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import heroImage from "@/assets/hero-couple.jpg";
@@ -12,6 +12,7 @@ interface Message {
   content: string;
   sender_id: string;
   created_at: string;
+  read_at: string | null;
 }
 
 const Chat = () => {
@@ -27,7 +28,32 @@ const Chat = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  // Mark messages as read when entering chat
+  // Mark partner's unread messages as read in DB
+  const markMessagesAsRead = useCallback(async () => {
+    if (!user || !profile?.couple_id) return;
+
+    const unreadIds = messages
+      .filter((m) => m.sender_id !== user.id && !m.read_at)
+      .map((m) => m.id);
+
+    if (unreadIds.length === 0) return;
+
+    const now = new Date().toISOString();
+
+    await supabase
+      .from("messages")
+      .update({ read_at: now })
+      .in("id", unreadIds);
+
+    // Update local state
+    setMessages((prev) =>
+      prev.map((m) =>
+        unreadIds.includes(m.id) ? { ...m, read_at: now } : m
+      )
+    );
+  }, [messages, user, profile?.couple_id]);
+
+  // Mark unread nav badge + DB read receipts on enter
   useEffect(() => {
     markAsRead();
     return () => {
@@ -35,10 +61,28 @@ const Chat = () => {
     };
   }, [markAsRead]);
 
+  // Mark messages as read whenever new messages from partner appear
+  useEffect(() => {
+    if (!document.hidden) {
+      markMessagesAsRead();
+    }
+  }, [messages, markMessagesAsRead]);
+
+  // Also mark as read when tab becomes visible
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (!document.hidden) {
+        markMessagesAsRead();
+        markAsRead();
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () => document.removeEventListener("visibilitychange", handleVisibility);
+  }, [markMessagesAsRead, markAsRead]);
+
   useEffect(() => {
     if (!profile?.couple_id) return;
 
-    // Fetch existing messages
     const fetchMessages = async () => {
       const { data } = await supabase
         .from("messages")
@@ -46,12 +90,12 @@ const Chat = () => {
         .eq("couple_id", profile.couple_id)
         .order("created_at", { ascending: true });
 
-      if (data) setMessages(data);
+      if (data) setMessages(data as Message[]);
     };
 
     fetchMessages();
 
-    // Subscribe to new messages
+    // Subscribe to inserts and updates (for read receipts)
     const channel = supabase
       .channel("messages")
       .on(
@@ -66,9 +110,8 @@ const Chat = () => {
           const newMsg = payload.new as Message;
           setMessages((prev) => [...prev, newMsg]);
 
-          // Send notification if message is from partner and page not focused
           if (newMsg.sender_id !== user?.id) {
-            markAsRead(); // We're on chat page, mark as read
+            markAsRead();
             if (document.hidden) {
               sendLocalNotification(
                 `${partner?.display_name || "Your Love"} 💕`,
@@ -76,6 +119,21 @@ const Chat = () => {
               );
             }
           }
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "messages",
+          filter: `couple_id=eq.${profile.couple_id}`,
+        },
+        (payload) => {
+          const updated = payload.new as Message;
+          setMessages((prev) =>
+            prev.map((m) => (m.id === updated.id ? updated : m))
+          );
         }
       )
       .subscribe();
@@ -128,7 +186,7 @@ const Chat = () => {
 
   return (
     <div className="flex flex-col h-[100dvh]">
-      {/* Header - fixed top */}
+      {/* Header */}
       <div className="sticky top-0 z-20 glass border-b border-border px-5 py-4 flex items-center gap-3">
         <div className="w-10 h-10 rounded-full overflow-hidden gradient-rose flex items-center justify-center text-lg">
           {couplePicUrl ? (
@@ -145,7 +203,7 @@ const Chat = () => {
         </div>
       </div>
 
-      {/* Messages - scrollable middle */}
+      {/* Messages */}
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
         <AnimatePresence>
           {messages.map((msg) => {
@@ -165,13 +223,22 @@ const Chat = () => {
                   }`}
                 >
                   <p className="text-sm leading-relaxed">{msg.content}</p>
-                  <p
-                    className={`text-[10px] mt-1 ${
-                      isMe ? "text-primary-foreground/60" : "text-muted-foreground"
-                    }`}
-                  >
-                    {formatTime(msg.created_at)}
-                  </p>
+                  <div className={`flex items-center gap-1 mt-1 ${isMe ? "justify-end" : ""}`}>
+                    <p
+                      className={`text-[10px] ${
+                        isMe ? "text-primary-foreground/60" : "text-muted-foreground"
+                      }`}
+                    >
+                      {formatTime(msg.created_at)}
+                    </p>
+                    {isMe && (
+                      msg.read_at ? (
+                        <CheckCheck className="w-3.5 h-3.5 text-primary-foreground" />
+                      ) : (
+                        <Check className="w-3.5 h-3.5 text-primary-foreground/50" />
+                      )
+                    )}
+                  </div>
                 </div>
               </motion.div>
             );
@@ -180,7 +247,7 @@ const Chat = () => {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input - fixed above bottom nav */}
+      {/* Input */}
       <div className="sticky bottom-16 z-20 glass border-t border-border px-4 py-3">
         <div className="flex items-center gap-2 bg-secondary rounded-full px-4 py-2">
           <input
