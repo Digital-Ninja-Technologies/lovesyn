@@ -17,16 +17,19 @@ export type Database = {
       couples: {
         Row: {
           anniversary_date: string | null
+          couple_pic_url: string | null
           created_at: string
           id: string
         }
         Insert: {
           anniversary_date?: string | null
+          couple_pic_url?: string | null
           created_at?: string
           id?: string
         }
         Update: {
           anniversary_date?: string | null
+          couple_pic_url?: string | null
           created_at?: string
           id?: string
         }
