@@ -1,7 +1,9 @@
-import { useState } from "react";
-import { Check, CheckCheck } from "lucide-react";
+import { useState, useRef, useCallback } from "react";
+import { Check, CheckCheck, Copy, StickyNote, Trash2, SmilePlus } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
 
 const REACTION_EMOJIS = ["❤️", "😂", "😮", "😢", "🔥", "👍"];
 
@@ -18,14 +20,33 @@ interface MessageBubbleProps {
   read_at: string | null;
   isMe: boolean;
   userId: string;
+  coupleId: string;
   reactions: Reaction[];
+  onDeleted?: (id: string) => void;
 }
 
-const MessageBubble = ({ id, content, created_at, read_at, isMe, userId, reactions }: MessageBubbleProps) => {
+const MessageBubble = ({ id, content, created_at, read_at, isMe, userId, coupleId, reactions, onDeleted }: MessageBubbleProps) => {
+  const [showMenu, setShowMenu] = useState(false);
   const [showReactionPicker, setShowReactionPicker] = useState(false);
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const { toast } = useToast();
+  const navigate = useNavigate();
 
   const formatTime = (date: string) =>
     new Date(date).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+
+  const handleTouchStart = useCallback(() => {
+    longPressTimer.current = setTimeout(() => {
+      setShowMenu(true);
+    }, 500);
+  }, []);
+
+  const handleTouchEnd = useCallback(() => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+  }, []);
 
   const toggleReaction = async (emoji: string) => {
     const existing = reactions.find((r) => r.user_id === userId && r.emoji === emoji);
@@ -33,15 +54,49 @@ const MessageBubble = ({ id, content, created_at, read_at, isMe, userId, reactio
       await supabase.from("message_reactions").delete().eq("id", existing.id);
     } else {
       await supabase.from("message_reactions").insert({
-        message_id: id,
-        user_id: userId,
-        emoji,
+        message_id: id, user_id: userId, emoji,
       });
     }
     setShowReactionPicker(false);
+    setShowMenu(false);
   };
 
-  // Group reactions by emoji with count
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(content);
+      toast({ title: "Copied to clipboard 📋" });
+    } catch {
+      toast({ title: "Could not copy", variant: "destructive" });
+    }
+    setShowMenu(false);
+  };
+
+  const handleAddToNotes = async () => {
+    const { error } = await supabase.from("notes").insert({
+      couple_id: coupleId,
+      created_by: userId,
+      title: `Chat message`,
+      content: content,
+    });
+    if (error) {
+      toast({ title: "Failed to save note", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Saved to notes 📝" });
+    }
+    setShowMenu(false);
+  };
+
+  const handleDelete = async () => {
+    if (!isMe) return;
+    const { error } = await supabase.from("messages").delete().eq("id", id);
+    if (error) {
+      toast({ title: "Failed to delete", description: error.message, variant: "destructive" });
+    } else {
+      onDeleted?.(id);
+    }
+    setShowMenu(false);
+  };
+
   const groupedReactions = reactions.reduce<Record<string, { count: number; mine: boolean }>>((acc, r) => {
     if (!acc[r.emoji]) acc[r.emoji] = { count: 0, mine: false };
     acc[r.emoji].count++;
@@ -55,27 +110,96 @@ const MessageBubble = ({ id, content, created_at, read_at, isMe, userId, reactio
       animate={{ opacity: 1, y: 0, scale: 1 }}
       className={`flex flex-col ${isMe ? "items-end" : "items-start"}`}
     >
-      <div
-        className={`relative max-w-[75%] rounded-2xl px-4 py-2.5 ${
-          isMe
-            ? "gradient-rose text-primary-foreground rounded-br-md"
-            : "bg-card shadow-soft text-card-foreground rounded-bl-md"
-        }`}
-        onDoubleClick={() => setShowReactionPicker((v) => !v)}
-      >
-        <p className="text-sm leading-relaxed">{content}</p>
-        <div className={`flex items-center gap-1 mt-1 ${isMe ? "justify-end" : ""}`}>
-          <p className={`text-[10px] ${isMe ? "text-primary-foreground/60" : "text-muted-foreground"}`}>
-            {formatTime(created_at)}
-          </p>
-          {isMe && (
-            read_at ? (
-              <CheckCheck className="w-3.5 h-3.5 text-primary-foreground" />
-            ) : (
-              <Check className="w-3.5 h-3.5 text-primary-foreground/50" />
-            )
-          )}
+      {/* Context menu overlay */}
+      <AnimatePresence>
+        {showMenu && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-40"
+            onClick={() => { setShowMenu(false); setShowReactionPicker(false); }}
+          />
+        )}
+      </AnimatePresence>
+
+      <div className="relative z-50">
+        <div
+          className={`relative max-w-[75vw] rounded-2xl px-4 py-2.5 select-none ${
+            isMe
+              ? "gradient-rose text-primary-foreground rounded-br-md"
+              : "bg-card shadow-soft text-card-foreground rounded-bl-md"
+          }`}
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+          onTouchMove={handleTouchEnd}
+          onContextMenu={(e) => { e.preventDefault(); setShowMenu(true); }}
+        >
+          <p className="text-sm leading-relaxed">{content}</p>
+          <div className={`flex items-center gap-1 mt-1 ${isMe ? "justify-end" : ""}`}>
+            <p className={`text-[10px] ${isMe ? "text-primary-foreground/60" : "text-muted-foreground"}`}>
+              {formatTime(created_at)}
+            </p>
+            {isMe && (
+              read_at ? (
+                <CheckCheck className="w-3.5 h-3.5 text-primary-foreground" />
+              ) : (
+                <Check className="w-3.5 h-3.5 text-primary-foreground/50" />
+              )
+            )}
+          </div>
         </div>
+
+        {/* Long-press context menu */}
+        <AnimatePresence>
+          {showMenu && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.85, y: -5 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.85, y: -5 }}
+              transition={{ duration: 0.15 }}
+              className={`absolute ${isMe ? "right-0" : "left-0"} mt-1 bg-card rounded-2xl shadow-lg border border-border overflow-hidden min-w-[180px] z-50`}
+            >
+              {/* Quick reactions row */}
+              <div className="flex gap-0.5 px-2 py-2 border-b border-border">
+                {REACTION_EMOJIS.map((emoji) => (
+                  <button
+                    key={emoji}
+                    onClick={() => toggleReaction(emoji)}
+                    className="w-9 h-9 flex items-center justify-center text-lg hover:scale-110 active:scale-95 transition-transform rounded-full hover:bg-secondary"
+                  >
+                    {emoji}
+                  </button>
+                ))}
+              </div>
+
+              {/* Actions */}
+              <button
+                onClick={handleCopy}
+                className="flex items-center gap-3 w-full px-4 py-3 text-sm text-foreground hover:bg-secondary transition-colors"
+              >
+                <Copy className="w-4 h-4 text-muted-foreground" />
+                Copy
+              </button>
+              <button
+                onClick={handleAddToNotes}
+                className="flex items-center gap-3 w-full px-4 py-3 text-sm text-foreground hover:bg-secondary transition-colors"
+              >
+                <StickyNote className="w-4 h-4 text-muted-foreground" />
+                Save to Notes
+              </button>
+              {isMe && (
+                <button
+                  onClick={handleDelete}
+                  className="flex items-center gap-3 w-full px-4 py-3 text-sm text-destructive hover:bg-destructive/10 transition-colors"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Delete
+                </button>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Reaction badges */}
@@ -86,9 +210,7 @@ const MessageBubble = ({ id, content, created_at, read_at, isMe, userId, reactio
               key={emoji}
               onClick={() => toggleReaction(emoji)}
               className={`flex items-center gap-0.5 text-xs px-1.5 py-0.5 rounded-full border transition-colors ${
-                mine
-                  ? "bg-primary/10 border-primary/30"
-                  : "bg-card border-border"
+                mine ? "bg-primary/10 border-primary/30" : "bg-card border-border"
               }`}
             >
               <span>{emoji}</span>
@@ -97,28 +219,6 @@ const MessageBubble = ({ id, content, created_at, read_at, isMe, userId, reactio
           ))}
         </div>
       )}
-
-      {/* Reaction picker */}
-      <AnimatePresence>
-        {showReactionPicker && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.8 }}
-            className={`flex gap-1 mt-1 bg-card shadow-lg rounded-full px-2 py-1.5 border border-border ${isMe ? "mr-1" : "ml-1"}`}
-          >
-            {REACTION_EMOJIS.map((emoji) => (
-              <button
-                key={emoji}
-                onClick={() => toggleReaction(emoji)}
-                className="w-8 h-8 flex items-center justify-center text-lg hover:scale-125 transition-transform active:scale-95 rounded-full hover:bg-secondary"
-              >
-                {emoji}
-              </button>
-            ))}
-          </motion.div>
-        )}
-      </AnimatePresence>
     </motion.div>
   );
 };

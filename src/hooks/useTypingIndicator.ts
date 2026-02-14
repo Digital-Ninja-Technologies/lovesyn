@@ -8,6 +8,7 @@ export function useTypingIndicator() {
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastSentRef = useRef(0);
+  const subscribedRef = useRef(false);
 
   useEffect(() => {
     if (!profile?.couple_id || !user) return;
@@ -23,18 +24,20 @@ export function useTypingIndicator() {
           timeoutRef.current = setTimeout(() => setPartnerIsTyping(false), 3000);
         }
       })
-      .subscribe();
+      .subscribe((status) => {
+        subscribedRef.current = status === "SUBSCRIBED";
+      });
 
     return () => {
+      subscribedRef.current = false;
       supabase.removeChannel(channel);
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
     };
   }, [profile?.couple_id, user]);
 
   const sendTyping = useCallback(() => {
-    if (!channelRef.current || !user) return;
+    if (!channelRef.current || !user || !subscribedRef.current) return;
     const now = Date.now();
-    // Throttle: send at most once per 2 seconds
     if (now - lastSentRef.current < 2000) return;
     lastSentRef.current = now;
 
