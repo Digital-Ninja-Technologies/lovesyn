@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Heart, Copy, Check, ArrowRight, Loader2 } from "lucide-react";
+import { Heart, Copy, Check, ArrowRight, Loader2, HeartHandshake, Unlink } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,7 +10,7 @@ const ConnectPartner = () => {
   const [partnerCode, setPartnerCode] = useState("");
   const [copied, setCopied] = useState(false);
   const [loading, setLoading] = useState(false);
-  const { profile, connectPartner, refreshProfile } = useAuth();
+  const { profile, partner, connectPartner, refreshProfile } = useAuth();
   const { toast } = useToast();
 
   const copyCode = async () => {
@@ -47,6 +47,35 @@ const ConnectPartner = () => {
   return (
     <div className="flex flex-col min-h-screen">
       <div className="flex-1 flex flex-col px-5 pt-12 pb-24">
+        {/* Connection Status Banner */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className={`rounded-2xl p-4 mb-6 flex items-center gap-3 border ${
+            partner
+              ? "bg-primary/10 border-primary/20"
+              : "bg-muted border-border"
+          }`}
+        >
+          {partner ? (
+            <>
+              <HeartHandshake className="w-6 h-6 text-primary shrink-0" />
+              <div>
+                <p className="font-semibold text-foreground text-sm">Connected with {partner.display_name} {partner.avatar_emoji}</p>
+                <p className="text-xs text-muted-foreground">You're synced and sharing everything 💕</p>
+              </div>
+            </>
+          ) : (
+            <>
+              <Unlink className="w-6 h-6 text-muted-foreground shrink-0" />
+              <div>
+                <p className="font-semibold text-foreground text-sm">Not connected yet</p>
+                <p className="text-xs text-muted-foreground">Share your code or enter your partner's code below</p>
+              </div>
+            </>
+          )}
+        </motion.div>
+
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
