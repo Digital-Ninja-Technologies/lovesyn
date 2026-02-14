@@ -229,9 +229,9 @@ const Memories = () => {
                   e.stopPropagation();
                   deleteMemory(memory.id);
                 }}
-                className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity bg-background/50 rounded-full p-1"
+                className="absolute top-2 right-2 bg-destructive/80 backdrop-blur-sm rounded-full p-1.5 opacity-0 group-hover:opacity-100 sm:opacity-0 sm:group-hover:opacity-100 active:opacity-100 transition-opacity"
               >
-                <Trash2 className="w-4 h-4 text-destructive" />
+                <Trash2 className="w-3.5 h-3.5 text-destructive-foreground" />
               </button>
             )}
           </motion.div>

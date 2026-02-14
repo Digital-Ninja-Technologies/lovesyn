@@ -10,9 +10,11 @@ import {
   ArrowRight,
   Star,
   ChevronDown,
+  Download,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import heroImage from "@/assets/hero-couple.jpg";
+import { useInstallPWA } from "@/hooks/useInstallPWA";
 
 const features = [
   {
@@ -66,6 +68,7 @@ const fadeUp = {
 
 const Landing = () => {
   const navigate = useNavigate();
+  const { isInstallable, isInstalled, install } = useInstallPWA();
 
   return (
     <div className="min-h-screen bg-background overflow-x-hidden">
@@ -153,9 +156,26 @@ const Landing = () => {
             >
               Start Free <ArrowRight className="w-5 h-5 ml-1" />
             </Button>
-            <p className="text-primary-foreground/60 text-sm">
-              Free forever · No credit card needed
-            </p>
+            {isInstallable && !isInstalled && (
+              <Button
+                onClick={install}
+                size="lg"
+                variant="outline"
+                className="rounded-full px-8 py-6 text-lg font-semibold border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10 w-full sm:w-auto"
+              >
+                <Download className="w-5 h-5 mr-1" /> Install App
+              </Button>
+            )}
+            {isInstalled && (
+              <p className="text-primary-foreground/60 text-sm flex items-center gap-1">
+                ✅ App installed
+              </p>
+            )}
+            {!isInstallable && !isInstalled && (
+              <p className="text-primary-foreground/60 text-sm">
+                Free forever · No credit card needed
+              </p>
+            )}
           </motion.div>
         </div>
 
