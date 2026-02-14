@@ -23,6 +23,7 @@ interface AuthContextType {
   session: Session | null;
   profile: Profile | null;
   partner: Partner | null;
+  couplePicUrl: string | null;
   loading: boolean;
   signUp: (email: string, password: string, displayName: string) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
@@ -39,6 +40,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [partner, setPartner] = useState<Partner | null>(null);
+  const [couplePicUrl, setCouplePicUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   const fetchProfile = async (userId: string) => {
@@ -51,7 +53,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (!error && data) {
       setProfile(data as Profile);
 
-      // Fetch partner if coupled
+      // Fetch partner and couple data if coupled
       if (data.couple_id) {
         const { data: partnerData } = await supabase
           .from("profiles")
@@ -63,6 +65,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         if (partnerData) {
           setPartner(partnerData as Partner);
         }
+
+        const { data: coupleData } = await supabase
+          .from("couples")
+          .select("couple_pic_url")
+          .eq("id", data.couple_id)
+          .single();
+
+        setCouplePicUrl(coupleData?.couple_pic_url || null);
+      } else {
+        setCouplePicUrl(null);
       }
     }
   };
@@ -191,6 +203,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         session,
         profile,
         partner,
+        couplePicUrl,
         loading,
         signUp,
         signIn,

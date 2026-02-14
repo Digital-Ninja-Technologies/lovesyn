@@ -8,7 +8,7 @@ import { usePushNotifications } from "@/hooks/usePushNotifications";
 import heroImage from "@/assets/hero-couple.jpg";
 
 const Index = () => {
-  const { user, profile, partner, signOut } = useAuth();
+  const { user, profile, partner, couplePicUrl, signOut } = useAuth();
   const navigate = useNavigate();
   const [moodSent, setMoodSent] = useState(false);
   const { isSupported, permission, requestPermission, sendLocalNotification } =
@@ -166,8 +166,8 @@ const Index = () => {
       {/* Hero Section */}
       <div className="relative h-72 overflow-hidden">
         <img
-          src={profile?.profile_pic_url || heroImage}
-          alt="Profile hero"
+          src={couplePicUrl || profile?.profile_pic_url || heroImage}
+          alt="Hero"
           className="absolute inset-0 w-full h-full object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-background" />
