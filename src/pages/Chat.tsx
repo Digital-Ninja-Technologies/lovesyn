@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Send, Heart } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
+import heroImage from "@/assets/hero-couple.jpg";
 import { supabase } from "@/integrations/supabase/client";
 
 interface Message {
@@ -15,7 +16,7 @@ const Chat = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
-  const { user, profile, partner } = useAuth();
+  const { user, profile, partner, couplePicUrl } = useAuth();
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -105,8 +106,12 @@ const Chat = () => {
     <div className="flex flex-col h-[100dvh]">
       {/* Header - fixed top */}
       <div className="sticky top-0 z-20 glass border-b border-border px-5 py-4 flex items-center gap-3">
-        <div className="w-10 h-10 rounded-full gradient-rose flex items-center justify-center text-lg">
-          {partner?.avatar_emoji || "💕"}
+        <div className="w-10 h-10 rounded-full overflow-hidden gradient-rose flex items-center justify-center text-lg">
+          {couplePicUrl ? (
+            <img src={couplePicUrl} alt="Couple" className="w-full h-full object-cover" />
+          ) : (
+            partner?.avatar_emoji || "💕"
+          )}
         </div>
         <div>
           <h1 className="font-serif text-lg font-semibold text-foreground">
