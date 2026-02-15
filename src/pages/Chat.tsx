@@ -57,8 +57,29 @@ const Chat = () => {
     setMessages((prev) => prev.map((m) => unreadIds.includes(m.id) ? { ...m, read_at: now } : m));
   }, [messages, user, profile?.couple_id]);
 
+  const autoDownloadImage = useCallback(async (imagePath: string) => {
+    try {
+      const { data } = await supabase.storage
+        .from("chat-media")
+        .createSignedUrl(imagePath, 60 * 5);
+      if (!data?.signedUrl) return;
+
+      const response = await fetch(data.signedUrl);
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = imagePath.split("/").pop() || "lovesync-photo.jpg";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch {
+      // Silent fail — don't interrupt chat experience
+    }
+  }, []);
+
   useEffect(() => {
-    markAsRead();
     return () => { markAsRead(); };
   }, [markAsRead]);
 
@@ -106,6 +127,10 @@ const Chat = () => {
       }, (payload) => {
         const newMsg = payload.new as Message;
         setMessages((prev) => [...prev, newMsg]);
+        // Auto-download image to device
+        if (newMsg.image_url) {
+          autoDownloadImage(newMsg.image_url);
+        }
         if (newMsg.sender_id !== user?.id) {
           markAsRead();
           if (document.hidden) {
