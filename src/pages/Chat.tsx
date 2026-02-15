@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Send, Heart } from "lucide-react";
+import { Send, Heart, ImagePlus, X, Loader2 } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,6 +8,7 @@ import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { useTypingIndicator } from "@/hooks/useTypingIndicator";
 import MessageBubble from "@/components/MessageBubble";
 import { motion } from "framer-motion";
+import { useToast } from "@/hooks/use-toast";
 
 interface Message {
   id: string;
@@ -15,6 +16,7 @@ interface Message {
   sender_id: string;
   created_at: string;
   read_at: string | null;
+  image_url: string | null;
 }
 
 interface Reaction {
@@ -29,11 +31,16 @@ const Chat = () => {
   const [reactions, setReactions] = useState<Reaction[]>([]);
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { user, profile, partner, couplePicUrl } = useAuth();
   const { markAsRead } = useUnread();
   const { sendLocalNotification } = usePushNotifications();
   const { partnerIsTyping, sendTyping } = useTypingIndicator();
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const { toast } = useToast();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -67,7 +74,6 @@ const Chat = () => {
     return () => document.removeEventListener("visibilitychange", handleVisibility);
   }, [markMessagesAsRead, markAsRead]);
 
-  // Fetch messages and reactions
   useEffect(() => {
     if (!profile?.couple_id) return;
 
@@ -79,7 +85,6 @@ const Chat = () => {
         .order("created_at", { ascending: true });
       if (msgData) {
         setMessages(msgData as Message[]);
-        // Fetch reactions for these messages
         const msgIds = msgData.map((m) => m.id);
         if (msgIds.length > 0) {
           const { data: rxData } = await supabase
@@ -104,7 +109,7 @@ const Chat = () => {
         if (newMsg.sender_id !== user?.id) {
           markAsRead();
           if (document.hidden) {
-            sendLocalNotification(`${partner?.display_name || "Your Love"} 💕`, newMsg.content);
+            sendLocalNotification(`${partner?.display_name || "Your Love"} 💕`, newMsg.content || "Sent a photo 📷");
           }
         }
       })
@@ -131,14 +136,84 @@ const Chat = () => {
 
   useEffect(() => { scrollToBottom(); }, [messages]);
 
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast({ title: "Only images are supported", variant: "destructive" });
+      return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      toast({ title: "Image too large (max 10MB)", variant: "destructive" });
+      return;
+    }
+
+    setSelectedImage(file);
+    setImagePreview(URL.createObjectURL(file));
+  };
+
+  const clearSelectedImage = () => {
+    setSelectedImage(null);
+    if (imagePreview) URL.revokeObjectURL(imagePreview);
+    setImagePreview(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const uploadImage = async (file: File): Promise<string | null> => {
+    if (!profile?.couple_id || !user) return null;
+    const ext = file.name.split(".").pop();
+    const fileName = `${profile.couple_id}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+
+    const { error } = await supabase.storage
+      .from("chat-media")
+      .upload(fileName, file, { contentType: file.type });
+
+    if (error) {
+      toast({ title: "Upload failed", description: error.message, variant: "destructive" });
+      return null;
+    }
+
+    return fileName;
+  };
+
+  const getSignedUrl = async (path: string): Promise<string | null> => {
+    const { data } = await supabase.storage
+      .from("chat-media")
+      .createSignedUrl(path, 60 * 60); // 1 hour
+    return data?.signedUrl || null;
+  };
+
   const sendMessage = async () => {
-    if (!input.trim() || !profile?.couple_id || !user) return;
+    if ((!input.trim() && !selectedImage) || !profile?.couple_id || !user) return;
     setSending(true);
+    setUploading(!!selectedImage);
+
+    let imageUrl: string | null = null;
+
+    if (selectedImage) {
+      imageUrl = await uploadImage(selectedImage);
+      if (!imageUrl && !input.trim()) {
+        setSending(false);
+        setUploading(false);
+        return;
+      }
+    }
+
     const { error } = await supabase.from("messages").insert({
-      couple_id: profile.couple_id, sender_id: user.id, content: input.trim(),
+      couple_id: profile.couple_id,
+      sender_id: user.id,
+      content: input.trim() || (imageUrl ? "📷 Photo" : ""),
+      image_url: imageUrl,
     });
-    if (!error) setInput("");
+
+    if (!error) {
+      setInput("");
+      clearSelectedImage();
+    }
     setSending(false);
+    setUploading(false);
   };
 
   if (!profile?.couple_id) {
@@ -176,6 +251,7 @@ const Chat = () => {
               content={msg.content}
               created_at={msg.created_at}
               read_at={msg.read_at}
+              image_url={msg.image_url}
               isMe={msg.sender_id === user?.id}
               userId={user?.id || ""}
               coupleId={profile.couple_id!}
@@ -201,7 +277,44 @@ const Chat = () => {
 
       {/* Input */}
       <div className="fixed bottom-16 left-0 right-0 z-30 glass border-t border-border px-4 py-3 max-w-lg mx-auto">
+        {/* Image preview */}
+        <AnimatePresence>
+          {imagePreview && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 10 }}
+              className="mb-2 relative inline-block"
+            >
+              <img
+                src={imagePreview}
+                alt="Preview"
+                className="h-20 w-20 object-cover rounded-xl border border-border"
+              />
+              <button
+                onClick={clearSelectedImage}
+                className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         <div className="flex items-center gap-2 bg-secondary rounded-full px-4 py-2">
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleImageSelect}
+            accept="image/*"
+            className="hidden"
+          />
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            className="w-9 h-9 rounded-full flex items-center justify-center text-muted-foreground hover:text-primary transition-colors hover:bg-primary/10 active:scale-95"
+          >
+            <ImagePlus className="w-5 h-5" />
+          </button>
           <input
             type="text"
             value={input}
@@ -212,10 +325,14 @@ const Chat = () => {
           />
           <button
             onClick={sendMessage}
-            disabled={!input.trim() || sending}
+            disabled={(!input.trim() && !selectedImage) || sending}
             className="w-9 h-9 gradient-rose rounded-full flex items-center justify-center disabled:opacity-40 transition-opacity active:scale-95"
           >
-            <Send className="w-4 h-4 text-primary-foreground" />
+            {uploading ? (
+              <Loader2 className="w-4 h-4 text-primary-foreground animate-spin" />
+            ) : (
+              <Send className="w-4 h-4 text-primary-foreground" />
+            )}
           </button>
         </div>
       </div>
