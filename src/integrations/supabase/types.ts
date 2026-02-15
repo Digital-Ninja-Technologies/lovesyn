@@ -216,6 +216,27 @@ export type Database = {
           },
         ]
       }
+      partner_lookup_attempts: {
+        Row: {
+          attempted_at: string
+          id: string
+          success: boolean
+          user_id: string
+        }
+        Insert: {
+          attempted_at?: string
+          id?: string
+          success?: boolean
+          user_id: string
+        }
+        Update: {
+          attempted_at?: string
+          id?: string
+          success?: boolean
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_emoji: string | null
@@ -292,6 +313,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      cleanup_old_lookup_attempts: { Args: never; Returns: undefined }
       connect_partners: {
         Args: { current_user_id: string; partner_user_id: string }
         Returns: string
