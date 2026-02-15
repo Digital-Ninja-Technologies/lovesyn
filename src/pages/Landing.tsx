@@ -81,7 +81,19 @@ const Landing = () => {
             </div>
             <span className="font-serif text-xl font-bold text-foreground">LoveSync</span>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            {isInstallable && !isInstalled && (
+              <Button
+                onClick={install}
+                variant="ghost"
+                className="text-muted-foreground font-medium"
+              >
+                <Download className="w-4 h-4 mr-1" /> Install
+              </Button>
+            )}
+            {isInstalled && (
+              <span className="text-xs text-muted-foreground flex items-center gap-1">✅ Installed</span>
+            )}
             <Button
               variant="ghost"
               onClick={() => navigate("/auth")}
