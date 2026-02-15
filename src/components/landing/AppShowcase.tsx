@@ -18,6 +18,20 @@ const float = {
   }),
 };
 
+const pulse = {
+  animate: {
+    scale: [1, 1.15, 1],
+    transition: { repeat: Infinity, duration: 2, ease: "easeInOut" as const },
+  },
+};
+
+const wiggle = {
+  animate: (i: number) => ({
+    rotate: [0, -4, 4, -2, 0],
+    transition: { repeat: Infinity, duration: 2.5, delay: i * 0.3, ease: "easeInOut" as const },
+  }),
+};
+
 const screens = [
   {
     icon: MessageCircle,
@@ -103,19 +117,33 @@ const AppShowcase = () => {
               </motion.span>
 
               {/* Phone mockup */}
-              <div className="bg-card rounded-3xl border-2 border-border shadow-soft p-3 pt-5 group-hover:shadow-rose transition-shadow duration-300">
+              <motion.div
+                whileHover={{ y: -6, scale: 1.02 }}
+                transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                className="bg-card rounded-3xl border-2 border-border shadow-soft p-3 pt-5 group-hover:shadow-rose transition-shadow duration-300"
+              >
                 {/* Phone notch */}
                 <div className="w-16 h-1.5 bg-border rounded-full mx-auto mb-3" />
 
                 {/* Screen content */}
                 <div className="bg-muted/30 rounded-2xl p-3 min-h-[180px] sm:min-h-[200px] flex flex-col">
                   {/* Header */}
-                  <div className="flex items-center gap-1.5 mb-3">
-                    <div className={`w-6 h-6 rounded-full bg-gradient-to-br ${screen.accent} flex items-center justify-center`}>
+                  <motion.div
+                    initial={{ opacity: 0, x: -10 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: 0.2 + i * 0.1 }}
+                    className="flex items-center gap-1.5 mb-3"
+                  >
+                    <motion.div
+                      animate={{ rotate: [0, 10, -10, 0] }}
+                      transition={{ repeat: Infinity, duration: 4, delay: i * 0.5 }}
+                      className={`w-6 h-6 rounded-full bg-gradient-to-br ${screen.accent} flex items-center justify-center`}
+                    >
                       <screen.icon className="w-3 h-3 text-white" />
-                    </div>
+                    </motion.div>
                     <span className="text-xs font-semibold text-foreground">{screen.title}</span>
-                  </div>
+                  </motion.div>
 
                   {/* Chat screen */}
                   {screen.bubbles && (
@@ -123,13 +151,14 @@ const AppShowcase = () => {
                       {screen.bubbles.map((bubble, j) => (
                         <motion.div
                           key={j}
-                          initial={{ opacity: 0, x: bubble.align === "left" ? -10 : 10 }}
-                          whileInView={{ opacity: 1, x: 0 }}
+                          initial={{ opacity: 0, x: bubble.align === "left" ? -20 : 20, scale: 0.8 }}
+                          whileInView={{ opacity: 1, x: 0, scale: 1 }}
                           viewport={{ once: true }}
-                          transition={{ delay: 0.3 + j * 0.15 }}
+                          transition={{ delay: 0.4 + j * 0.25, type: "spring", stiffness: 200 }}
                           className={`flex ${bubble.align === "right" ? "justify-end" : "justify-start"}`}
                         >
-                          <span
+                          <motion.span
+                            whileHover={{ scale: 1.05 }}
                             className={`text-[10px] sm:text-xs px-2.5 py-1.5 rounded-2xl max-w-[85%] ${
                               bubble.align === "right"
                                 ? "bg-primary text-primary-foreground rounded-br-md"
@@ -137,22 +166,29 @@ const AppShowcase = () => {
                             }`}
                           >
                             {bubble.text}
-                          </span>
+                          </motion.span>
                         </motion.div>
                       ))}
                       {/* Typing indicator */}
-                      <div className="flex items-center gap-1 mt-1">
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        whileInView={{ opacity: 1 }}
+                        viewport={{ once: true }}
+                        transition={{ delay: 1.2 }}
+                        className="flex items-center gap-1 mt-1"
+                      >
                         <span className="text-[10px] text-muted-foreground">typing</span>
                         <span className="flex gap-0.5">
                           {[0, 1, 2].map((d) => (
-                            <span
+                            <motion.span
                               key={d}
-                              className="w-1 h-1 rounded-full bg-muted-foreground/50 animate-bounce"
-                              style={{ animationDelay: `${d * 0.15}s` }}
+                              animate={{ y: [0, -3, 0], opacity: [0.4, 1, 0.4] }}
+                              transition={{ repeat: Infinity, duration: 0.8, delay: d * 0.15 }}
+                              className="w-1 h-1 rounded-full bg-muted-foreground/50"
                             />
                           ))}
                         </span>
-                      </div>
+                      </motion.div>
                     </div>
                   )}
 
@@ -162,13 +198,16 @@ const AppShowcase = () => {
                       {screen.memories.map((emoji, j) => (
                         <motion.div
                           key={j}
-                          initial={{ opacity: 0, scale: 0.8 }}
-                          whileInView={{ opacity: 1, scale: 1 }}
+                          initial={{ opacity: 0, scale: 0, rotate: -20 }}
+                          whileInView={{ opacity: 1, scale: 1, rotate: 0 }}
                           viewport={{ once: true }}
-                          transition={{ delay: 0.3 + j * 0.08 }}
-                          className="bg-card border border-border rounded-xl flex items-center justify-center aspect-square text-lg sm:text-xl hover:scale-110 transition-transform cursor-default"
+                          transition={{ delay: 0.3 + j * 0.1, type: "spring", stiffness: 250 }}
+                          whileHover={{ scale: 1.2, rotate: 5 }}
+                          className="bg-card border border-border rounded-xl flex items-center justify-center aspect-square text-lg sm:text-xl cursor-default"
                         >
-                          {emoji}
+                          <motion.span custom={j} animate="animate" variants={wiggle}>
+                            {emoji}
+                          </motion.span>
                         </motion.div>
                       ))}
                     </div>
@@ -180,20 +219,29 @@ const AppShowcase = () => {
                       {screen.notes.map((note, j) => (
                         <motion.div
                           key={j}
-                          initial={{ opacity: 0, y: 8 }}
-                          whileInView={{ opacity: 1, y: 0 }}
+                          initial={{ opacity: 0, y: 15, rotateX: -30 }}
+                          whileInView={{ opacity: 1, y: 0, rotateX: 0 }}
                           viewport={{ once: true }}
-                          transition={{ delay: 0.3 + j * 0.15 }}
+                          transition={{ delay: 0.4 + j * 0.2, type: "spring" }}
+                          whileHover={{ scale: 1.03, y: -2 }}
                           className="bg-card border border-border rounded-xl p-2 relative"
                         >
                           <p className="text-[10px] sm:text-xs text-card-foreground leading-snug">{note.text}</p>
                           {note.pinned && (
-                            <span className="absolute -top-1.5 -right-1.5 text-xs">📌</span>
+                            <motion.span
+                              animate={{ rotate: [0, 10, -10, 0] }}
+                              transition={{ repeat: Infinity, duration: 3 }}
+                              className="absolute -top-1.5 -right-1.5 text-xs"
+                            >
+                              📌
+                            </motion.span>
                           )}
                         </motion.div>
                       ))}
                       <div className="mt-auto flex justify-center">
-                        <Heart className="w-4 h-4 text-primary/40" fill="currentColor" />
+                        <motion.div animate="animate" variants={pulse}>
+                          <Heart className="w-4 h-4 text-primary/40" fill="currentColor" />
+                        </motion.div>
                       </div>
                     </div>
                   )}
@@ -201,26 +249,39 @@ const AppShowcase = () => {
                   {/* Mood screen */}
                   {screen.moods && (
                     <div className="flex flex-col items-center justify-center gap-3 flex-1">
-                      <p className="text-[10px] text-muted-foreground">How are you feeling?</p>
+                      <motion.p
+                        initial={{ opacity: 0 }}
+                        whileInView={{ opacity: 1 }}
+                        viewport={{ once: true }}
+                        transition={{ delay: 0.3 }}
+                        className="text-[10px] text-muted-foreground"
+                      >
+                        How are you feeling?
+                      </motion.p>
                       <div className="flex gap-2">
                         {screen.moods.map((mood, j) => (
                           <motion.span
                             key={j}
-                            initial={{ opacity: 0, scale: 0 }}
-                            whileInView={{ opacity: 1, scale: 1 }}
+                            initial={{ opacity: 0, scale: 0, y: 20 }}
+                            whileInView={{ opacity: 1, scale: 1, y: 0 }}
                             viewport={{ once: true }}
-                            transition={{ delay: 0.3 + j * 0.1, type: "spring" }}
-                            className="text-lg sm:text-xl cursor-default hover:scale-125 transition-transform"
+                            transition={{ delay: 0.4 + j * 0.12, type: "spring", stiffness: 300 }}
+                            whileHover={{ scale: 1.4, y: -5 }}
+                            animate={{ y: [0, -3, 0] }}
+                            // @ts-ignore
+                            transition2={{ y: { repeat: Infinity, duration: 2, delay: j * 0.3 } }}
+                            className="text-lg sm:text-xl cursor-default"
                           >
                             {mood}
                           </motion.span>
                         ))}
                       </div>
                       <motion.div
-                        initial={{ opacity: 0 }}
-                        whileInView={{ opacity: 1 }}
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        whileInView={{ opacity: 1, scale: 1 }}
                         viewport={{ once: true }}
-                        transition={{ delay: 0.8 }}
+                        transition={{ delay: 1, type: "spring" }}
+                        animate={{ scale: [1, 1.05, 1] }}
                         className="text-[10px] text-primary font-medium bg-primary/10 px-2 py-0.5 rounded-full"
                       >
                         You're both feeling 🥰
@@ -231,7 +292,7 @@ const AppShowcase = () => {
 
                 {/* Phone home bar */}
                 <div className="w-12 h-1 bg-border rounded-full mx-auto mt-3" />
-              </div>
+              </motion.div>
             </motion.div>
           ))}
         </div>
