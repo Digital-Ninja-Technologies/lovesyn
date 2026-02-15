@@ -182,27 +182,33 @@ const Settings = () => {
 
 
         {/* Install App */}
-        {(isInstallable || isInstalled) && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className="bg-card rounded-3xl p-5 shadow-soft border border-border mb-8"
-          >
-            <label className="text-sm text-muted-foreground mb-3 block">Install App</label>
-            {isInstalled ? (
-              <p className="text-sm text-foreground flex items-center gap-2">✅ LoveSync is installed on your device</p>
-            ) : (
-              <Button
-                onClick={install}
-                variant="outline"
-                className="w-full h-12 rounded-xl font-semibold"
-              >
-                <Download className="w-5 h-5 mr-2" /> Add to Home Screen
-              </Button>
-            )}
-          </motion.div>
-        )}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+          className="bg-card rounded-3xl p-5 shadow-soft border border-border mb-8"
+        >
+          <label className="text-sm text-muted-foreground mb-3 block">Install App</label>
+          {isInstalled ? (
+            <p className="text-sm text-foreground flex items-center gap-2">✅ LoveSync is installed on your device</p>
+          ) : isInstallable ? (
+            <Button
+              onClick={install}
+              variant="outline"
+              className="w-full h-12 rounded-xl font-semibold"
+            >
+              <Download className="w-5 h-5 mr-2" /> Add to Home Screen
+            </Button>
+          ) : (
+            <div className="space-y-2">
+              <p className="text-sm text-foreground">To install LoveSync as an app:</p>
+              <ul className="text-sm text-muted-foreground list-disc list-inside space-y-1">
+                <li><span className="font-medium text-foreground">Chrome/Edge:</span> Tap the menu (⋮) → "Install app"</li>
+                <li><span className="font-medium text-foreground">Safari (iOS):</span> Tap Share (↑) → "Add to Home Screen"</li>
+              </ul>
+            </div>
+          )}
+        </motion.div>
 
         {/* Disconnect Partner */}
         {profile?.couple_id && partner && (
