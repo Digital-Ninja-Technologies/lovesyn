@@ -177,7 +177,7 @@ const Landing = () => {
                 onClick={isInstallable ? install : undefined}
                 size="lg"
                 variant="outline"
-                className="rounded-full px-8 py-6 text-lg font-semibold border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10 w-full sm:w-auto"
+                className="rounded-full px-8 py-6 text-lg font-semibold border-primary/30 bg-primary/20 text-primary-foreground hover:bg-primary/30 w-full sm:w-auto"
               >
                 <Download className="w-5 h-5 mr-1" /> Install App
               </Button>
