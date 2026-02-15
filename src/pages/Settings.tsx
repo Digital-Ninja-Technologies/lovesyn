@@ -37,10 +37,18 @@ const Settings = () => {
   const [autoSaveMedia, setAutoSaveMedia] = useState(() => {
     return localStorage.getItem("lovesync-auto-save-media") !== "false";
   });
+  const [notificationSound, setNotificationSound] = useState(() => {
+    return localStorage.getItem("lovesync-notification-sound") !== "false";
+  });
 
   const handleAutoSaveToggle = (checked: boolean) => {
     setAutoSaveMedia(checked);
     localStorage.setItem("lovesync-auto-save-media", String(checked));
+  };
+
+  const handleNotificationSoundToggle = (checked: boolean) => {
+    setNotificationSound(checked);
+    localStorage.setItem("lovesync-notification-sound", String(checked));
   };
 
   const handleCouplePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -203,6 +211,22 @@ const Settings = () => {
               <p className="text-xs text-muted-foreground mt-0.5">Automatically download shared photos to your device</p>
             </div>
             <Switch checked={autoSaveMedia} onCheckedChange={handleAutoSaveToggle} />
+          </div>
+        </motion.div>
+
+        {/* Notification Sound */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.35 }}
+          className="bg-card rounded-3xl p-5 shadow-soft border border-border mb-4"
+        >
+          <div className="flex items-center justify-between">
+            <div>
+              <label className="text-sm font-medium text-foreground block">Notification Sound</label>
+              <p className="text-xs text-muted-foreground mt-0.5">Play a sound when you receive a message</p>
+            </div>
+            <Switch checked={notificationSound} onCheckedChange={handleNotificationSoundToggle} />
           </div>
         </motion.div>
 

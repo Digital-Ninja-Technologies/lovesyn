@@ -10,6 +10,7 @@ import MessageBubble from "@/components/MessageBubble";
 import FullscreenImage from "@/components/FullscreenImage";
 import { motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
+import { useNotificationSound } from "@/hooks/useNotificationSound";
 
 interface Message {
   id: string;
@@ -43,6 +44,7 @@ const Chat = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [fullscreenImage, setFullscreenImage] = useState<string | null>(null);
   const { toast } = useToast();
+  const { playNotificationSound } = useNotificationSound();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -134,6 +136,7 @@ const Chat = () => {
           autoDownloadImage(newMsg.image_url);
         }
         if (newMsg.sender_id !== user?.id) {
+          playNotificationSound();
           markAsRead();
           if (document.hidden) {
             sendLocalNotification(`${partner?.display_name || "Your Love"} 💕`, newMsg.content || "Sent a photo 📷");
