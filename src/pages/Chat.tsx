@@ -167,7 +167,7 @@ const Chat = () => {
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-4 py-4 pt-20 space-y-3">
+      <div className="flex-1 overflow-y-auto px-4 py-4 pt-20 pb-36 space-y-3">
         <AnimatePresence>
           {messages.map((msg) => (
             <MessageBubble
@@ -200,7 +200,7 @@ const Chat = () => {
       </div>
 
       {/* Input */}
-      <div className="sticky bottom-16 z-20 glass border-t border-border px-4 py-3">
+      <div className="fixed bottom-16 left-0 right-0 z-20 glass border-t border-border px-4 py-3 max-w-lg mx-auto">
         <div className="flex items-center gap-2 bg-secondary rounded-full px-4 py-2">
           <input
             type="text"
