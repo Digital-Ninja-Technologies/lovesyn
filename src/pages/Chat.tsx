@@ -127,8 +127,8 @@ const Chat = () => {
       }, (payload) => {
         const newMsg = payload.new as Message;
         setMessages((prev) => [...prev, newMsg]);
-        // Auto-download image to device
-        if (newMsg.image_url) {
+        // Auto-download image to device if enabled
+        if (newMsg.image_url && localStorage.getItem("lovesync-auto-save-media") !== "false") {
           autoDownloadImage(newMsg.image_url);
         }
         if (newMsg.sender_id !== user?.id) {
