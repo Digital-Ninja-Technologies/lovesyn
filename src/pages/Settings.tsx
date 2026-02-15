@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowLeft, Camera, Loader2, Check, ImagePlus, Download, Unlink, LogOut } from "lucide-react";
@@ -6,6 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import {
   AlertDialog,
@@ -33,6 +34,14 @@ const Settings = () => {
   const [avatarEmoji, setAvatarEmoji] = useState(profile?.avatar_emoji || "💕");
   const [uploadingCouple, setUploadingCouple] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [autoSaveMedia, setAutoSaveMedia] = useState(() => {
+    return localStorage.getItem("lovesync-auto-save-media") !== "false";
+  });
+
+  const handleAutoSaveToggle = (checked: boolean) => {
+    setAutoSaveMedia(checked);
+    localStorage.setItem("lovesync-auto-save-media", String(checked));
+  };
 
   const handleCouplePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -181,7 +190,22 @@ const Settings = () => {
         </motion.div>
 
 
-        {/* Install App */}
+        {/* Auto-Save Media */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="bg-card rounded-3xl p-5 shadow-soft border border-border mb-4"
+        >
+          <div className="flex items-center justify-between">
+            <div>
+              <label className="text-sm font-medium text-foreground block">Auto-Save Media</label>
+              <p className="text-xs text-muted-foreground mt-0.5">Automatically download shared photos to your device</p>
+            </div>
+            <Switch checked={autoSaveMedia} onCheckedChange={handleAutoSaveToggle} />
+          </div>
+        </motion.div>
+
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
