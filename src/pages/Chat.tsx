@@ -7,6 +7,7 @@ import { useUnread } from "@/contexts/UnreadContext";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { useTypingIndicator } from "@/hooks/useTypingIndicator";
 import MessageBubble from "@/components/MessageBubble";
+import FullscreenImage from "@/components/FullscreenImage";
 import { motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 
@@ -40,6 +41,7 @@ const Chat = () => {
   const { sendLocalNotification } = usePushNotifications();
   const { partnerIsTyping, sendTyping } = useTypingIndicator();
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [fullscreenImage, setFullscreenImage] = useState<string | null>(null);
   const { toast } = useToast();
 
   const scrollToBottom = () => {
@@ -252,116 +254,121 @@ const Chat = () => {
   }
 
   return (
-    <div className="flex flex-col h-[100dvh]">
-      {/* Header */}
-      <div className="fixed top-0 left-0 right-0 z-30 glass border-b border-border px-5 py-4 flex items-center gap-3 max-w-lg mx-auto">
-        <div className="w-10 h-10 rounded-full overflow-hidden gradient-rose flex items-center justify-center text-lg">
-          {couplePicUrl ? (
-            <img src={couplePicUrl} alt="Couple" className="w-full h-full object-cover" />
-          ) : (partner?.avatar_emoji || "💕")}
+    <>
+      <div className="flex flex-col h-[100dvh]">
+        {/* Header */}
+        <div className="fixed top-0 left-0 right-0 z-30 glass border-b border-border px-5 py-4 flex items-center gap-3 max-w-lg mx-auto">
+          <div className="w-10 h-10 rounded-full overflow-hidden gradient-rose flex items-center justify-center text-lg">
+            {couplePicUrl ? (
+              <img src={couplePicUrl} alt="Couple" className="w-full h-full object-cover" />
+            ) : (partner?.avatar_emoji || "💕")}
+          </div>
+          <div>
+            <h1 className="font-serif text-lg font-semibold text-foreground">{partner?.display_name || "Your Love"}</h1>
+            <p className="text-xs text-muted-foreground">Online now 💚</p>
+          </div>
         </div>
-        <div>
-          <h1 className="font-serif text-lg font-semibold text-foreground">{partner?.display_name || "Your Love"}</h1>
-          <p className="text-xs text-muted-foreground">Online now 💚</p>
-        </div>
-      </div>
 
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-4 py-4 pt-20 pb-36 space-y-3 relative z-0">
-        <AnimatePresence>
-          {messages.map((msg) => (
-            <MessageBubble
-              key={msg.id}
-              id={msg.id}
-              content={msg.content}
-              created_at={msg.created_at}
-              read_at={msg.read_at}
-              image_url={msg.image_url}
-              isMe={msg.sender_id === user?.id}
-              userId={user?.id || ""}
-              coupleId={profile.couple_id!}
-              reactions={reactions.filter((r) => r.message_id === msg.id)}
-              onDeleted={(deletedId) => setMessages((prev) => prev.filter((m) => m.id !== deletedId))}
-            />
-          ))}
-        </AnimatePresence>
-        {partnerIsTyping && (
-          <motion.div initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="flex justify-start">
-            <div className="bg-card shadow-soft rounded-2xl rounded-bl-md px-4 py-2.5 flex items-center gap-2">
-              <span className="text-xs text-muted-foreground font-medium">typing</span>
-              <span className="flex items-center gap-0.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/50 animate-bounce" style={{ animationDelay: "0ms" }} />
-                <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/50 animate-bounce" style={{ animationDelay: "150ms" }} />
-                <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/50 animate-bounce" style={{ animationDelay: "300ms" }} />
-              </span>
-            </div>
-          </motion.div>
-        )}
-        <div ref={messagesEndRef} />
-      </div>
-
-      {/* Input */}
-      <div className="fixed bottom-16 left-0 right-0 z-30 glass border-t border-border px-4 py-3 max-w-lg mx-auto">
-        {/* Image preview */}
-        <AnimatePresence>
-          {imagePreview && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 10 }}
-              className="mb-2 relative inline-block"
-            >
-              <img
-                src={imagePreview}
-                alt="Preview"
-                className="h-20 w-20 object-cover rounded-xl border border-border"
+        {/* Messages */}
+        <div className="flex-1 overflow-y-auto px-4 py-4 pt-20 pb-36 space-y-3 relative z-0">
+          <AnimatePresence>
+            {messages.map((msg) => (
+              <MessageBubble
+                key={msg.id}
+                id={msg.id}
+                content={msg.content}
+                created_at={msg.created_at}
+                read_at={msg.read_at}
+                image_url={msg.image_url}
+                isMe={msg.sender_id === user?.id}
+                userId={user?.id || ""}
+                coupleId={profile.couple_id!}
+                reactions={reactions.filter((r) => r.message_id === msg.id)}
+                onDeleted={(deletedId) => setMessages((prev) => prev.filter((m) => m.id !== deletedId))}
+                onImageClick={setFullscreenImage}
               />
-              <button
-                onClick={clearSelectedImage}
-                className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center"
-              >
-                <X className="w-3 h-3" />
-              </button>
+            ))}
+          </AnimatePresence>
+          {partnerIsTyping && (
+            <motion.div initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="flex justify-start">
+              <div className="bg-card shadow-soft rounded-2xl rounded-bl-md px-4 py-2.5 flex items-center gap-2">
+                <span className="text-xs text-muted-foreground font-medium">typing</span>
+                <span className="flex items-center gap-0.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/50 animate-bounce" style={{ animationDelay: "0ms" }} />
+                  <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/50 animate-bounce" style={{ animationDelay: "150ms" }} />
+                  <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/50 animate-bounce" style={{ animationDelay: "300ms" }} />
+                </span>
+              </div>
             </motion.div>
           )}
-        </AnimatePresence>
+          <div ref={messagesEndRef} />
+        </div>
 
-        <div className="flex items-center gap-2 bg-secondary rounded-full px-4 py-2">
-          <input
-            type="file"
-            ref={fileInputRef}
-            onChange={handleImageSelect}
-            accept="image/*"
-            className="hidden"
-          />
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            className="w-9 h-9 rounded-full flex items-center justify-center text-muted-foreground hover:text-primary transition-colors hover:bg-primary/10 active:scale-95"
-          >
-            <ImagePlus className="w-5 h-5" />
-          </button>
-          <input
-            type="text"
-            value={input}
-            onChange={(e) => { setInput(e.target.value); sendTyping(); }}
-            onKeyDown={(e) => e.key === "Enter" && !sending && sendMessage()}
-            placeholder="Type a love message..."
-            className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none"
-          />
-          <button
-            onClick={sendMessage}
-            disabled={(!input.trim() && !selectedImage) || sending}
-            className="w-9 h-9 gradient-rose rounded-full flex items-center justify-center disabled:opacity-40 transition-opacity active:scale-95"
-          >
-            {uploading ? (
-              <Loader2 className="w-4 h-4 text-primary-foreground animate-spin" />
-            ) : (
-              <Send className="w-4 h-4 text-primary-foreground" />
+        {/* Input */}
+        <div className="fixed bottom-16 left-0 right-0 z-30 glass border-t border-border px-4 py-3 max-w-lg mx-auto">
+          {/* Image preview */}
+          <AnimatePresence>
+            {imagePreview && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 10 }}
+                className="mb-2 relative inline-block"
+              >
+                <img
+                  src={imagePreview}
+                  alt="Preview"
+                  className="h-20 w-20 object-cover rounded-xl border border-border"
+                />
+                <button
+                  onClick={clearSelectedImage}
+                  className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </motion.div>
             )}
-          </button>
+          </AnimatePresence>
+
+          <div className="flex items-center gap-2 bg-secondary rounded-full px-4 py-2">
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleImageSelect}
+              accept="image/*"
+              className="hidden"
+            />
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="w-9 h-9 rounded-full flex items-center justify-center text-muted-foreground hover:text-primary transition-colors hover:bg-primary/10 active:scale-95"
+            >
+              <ImagePlus className="w-5 h-5" />
+            </button>
+            <input
+              type="text"
+              value={input}
+              onChange={(e) => { setInput(e.target.value); sendTyping(); }}
+              onKeyDown={(e) => e.key === "Enter" && !sending && sendMessage()}
+              placeholder="Type a love message..."
+              className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none"
+            />
+            <button
+              onClick={sendMessage}
+              disabled={(!input.trim() && !selectedImage) || sending}
+              className="w-9 h-9 gradient-rose rounded-full flex items-center justify-center disabled:opacity-40 transition-opacity active:scale-95"
+            >
+              {uploading ? (
+                <Loader2 className="w-4 h-4 text-primary-foreground animate-spin" />
+              ) : (
+                <Send className="w-4 h-4 text-primary-foreground" />
+              )}
+            </button>
+          </div>
         </div>
       </div>
-    </div>
+
+      <FullscreenImage src={fullscreenImage} onClose={() => setFullscreenImage(null)} />
+    </>
   );
 };
 

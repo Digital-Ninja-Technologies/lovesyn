@@ -24,9 +24,10 @@ interface MessageBubbleProps {
   coupleId: string;
   reactions: Reaction[];
   onDeleted?: (id: string) => void;
+  onImageClick?: (url: string) => void;
 }
 
-const MessageBubble = ({ id, content, created_at, read_at, image_url, isMe, userId, coupleId, reactions, onDeleted }: MessageBubbleProps) => {
+const MessageBubble = ({ id, content, created_at, read_at, image_url, isMe, userId, coupleId, reactions, onDeleted, onImageClick }: MessageBubbleProps) => {
   const [showMenu, setShowMenu] = useState(false);
   const [showReactionPicker, setShowReactionPicker] = useState(false);
   const [signedImageUrl, setSignedImageUrl] = useState<string | null>(null);
@@ -165,8 +166,9 @@ const MessageBubble = ({ id, content, created_at, read_at, image_url, isMe, user
                 <img
                   src={signedImageUrl}
                   alt="Shared photo"
-                  className={`max-w-[250px] w-full object-cover ${isImageOnly ? "rounded-2xl" : "rounded-t-2xl"}`}
+                  className={`max-w-[250px] w-full object-cover cursor-pointer ${isImageOnly ? "rounded-2xl" : "rounded-t-2xl"}`}
                   loading="lazy"
+                  onClick={() => onImageClick?.(signedImageUrl)}
                 />
               ) : null}
             </div>
