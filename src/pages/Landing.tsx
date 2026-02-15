@@ -168,25 +168,19 @@ const Landing = () => {
             >
               Start Free <ArrowRight className="w-5 h-5 ml-1" />
             </Button>
-            {isInstallable && !isInstalled && (
+            {isInstalled ? (
+              <p className="text-primary-foreground/60 text-sm flex items-center gap-1">
+                ✅ App installed
+              </p>
+            ) : (
               <Button
-                onClick={install}
+                onClick={isInstallable ? install : undefined}
                 size="lg"
                 variant="outline"
                 className="rounded-full px-8 py-6 text-lg font-semibold border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10 w-full sm:w-auto"
               >
                 <Download className="w-5 h-5 mr-1" /> Install App
               </Button>
-            )}
-            {isInstalled && (
-              <p className="text-primary-foreground/60 text-sm flex items-center gap-1">
-                ✅ App installed
-              </p>
-            )}
-            {!isInstallable && !isInstalled && (
-              <p className="text-primary-foreground/60 text-sm">
-                Free forever · No credit card needed
-              </p>
             )}
           </motion.div>
         </div>
