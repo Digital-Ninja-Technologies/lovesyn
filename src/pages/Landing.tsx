@@ -15,6 +15,7 @@ import {
 import { Button } from "@/components/ui/button";
 import heroImage from "@/assets/hero-couple.jpg";
 import { useInstallPWA } from "@/hooks/useInstallPWA";
+import AppShowcase from "@/components/landing/AppShowcase";
 
 const features = [
   {
@@ -271,6 +272,9 @@ const Landing = () => {
           </div>
         </div>
       </section>
+
+      {/* App Showcase */}
+      <AppShowcase />
 
       {/* How It Works */}
       <section className="py-20 gradient-warm">
