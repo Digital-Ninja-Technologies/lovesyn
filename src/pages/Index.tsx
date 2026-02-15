@@ -11,8 +11,24 @@ const Index = () => {
   const { user, profile, partner, couplePicUrl, signOut } = useAuth();
   const navigate = useNavigate();
   const [moodSent, setMoodSent] = useState(false);
+  const [partnerMood, setPartnerMood] = useState<string | null>(null);
   const { isSupported, permission, requestPermission, sendLocalNotification } =
     usePushNotifications();
+
+  // Fetch partner's latest mood
+  useEffect(() => {
+    if (!profile?.couple_id || !user) return;
+    supabase
+      .from("moods")
+      .select("emoji")
+      .eq("couple_id", profile.couple_id)
+      .neq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .then(({ data }) => {
+        if (data && data.length > 0) setPartnerMood(data[0].emoji);
+      });
+  }, [profile?.couple_id, user]);
 
   // Listen for partner's moods in realtime
   useEffect(() => {
@@ -31,6 +47,7 @@ const Index = () => {
         (payload) => {
           const mood = payload.new as { user_id: string; emoji: string };
           if (mood.user_id !== user.id) {
+            setPartnerMood(mood.emoji);
             sendLocalNotification(
               `${partner?.display_name || "Your love"} is feeling ${mood.emoji}`,
               "Open LoveSync to see their mood 💕"
@@ -224,9 +241,9 @@ const Index = () => {
           className="bg-card rounded-2xl p-4 shadow-soft"
         >
           <Clock className="w-5 h-5 text-primary mb-2" />
-          <p className="text-sm text-muted-foreground">Partner's emoji</p>
+          <p className="text-sm text-muted-foreground">Partner's mood</p>
           <p className="font-semibold text-card-foreground text-xl">
-            {partner?.avatar_emoji || "💕"}
+            {partnerMood || partner?.avatar_emoji || "💕"}
           </p>
         </motion.div>
       </div>
