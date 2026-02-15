@@ -154,7 +154,7 @@ const Chat = () => {
   return (
     <div className="flex flex-col h-[100dvh]">
       {/* Header */}
-      <div className="fixed top-0 left-0 right-0 z-20 glass border-b border-border px-5 py-4 flex items-center gap-3 max-w-lg mx-auto">
+      <div className="fixed top-0 left-0 right-0 z-30 glass border-b border-border px-5 py-4 flex items-center gap-3 max-w-lg mx-auto">
         <div className="w-10 h-10 rounded-full overflow-hidden gradient-rose flex items-center justify-center text-lg">
           {couplePicUrl ? (
             <img src={couplePicUrl} alt="Couple" className="w-full h-full object-cover" />
@@ -167,7 +167,7 @@ const Chat = () => {
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-4 py-4 pt-20 pb-36 space-y-3">
+      <div className="flex-1 overflow-y-auto px-4 py-4 pt-20 pb-36 space-y-3 relative z-0">
         <AnimatePresence>
           {messages.map((msg) => (
             <MessageBubble
@@ -200,7 +200,7 @@ const Chat = () => {
       </div>
 
       {/* Input */}
-      <div className="fixed bottom-16 left-0 right-0 z-20 glass border-t border-border px-4 py-3 max-w-lg mx-auto">
+      <div className="fixed bottom-16 left-0 right-0 z-30 glass border-t border-border px-4 py-3 max-w-lg mx-auto">
         <div className="flex items-center gap-2 bg-secondary rounded-full px-4 py-2">
           <input
             type="text"
