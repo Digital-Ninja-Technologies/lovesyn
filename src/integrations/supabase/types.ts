@@ -35,6 +35,53 @@ export type Database = {
         }
         Relationships: []
       }
+      date_ideas: {
+        Row: {
+          category: string
+          couple_id: string
+          created_at: string
+          created_by: string
+          description: string
+          duration: string | null
+          emoji: string
+          id: string
+          is_fantasy: boolean
+          title: string
+        }
+        Insert: {
+          category?: string
+          couple_id: string
+          created_at?: string
+          created_by: string
+          description: string
+          duration?: string | null
+          emoji?: string
+          id?: string
+          is_fantasy?: boolean
+          title: string
+        }
+        Update: {
+          category?: string
+          couple_id?: string
+          created_at?: string
+          created_by?: string
+          description?: string
+          duration?: string | null
+          emoji?: string
+          id?: string
+          is_fantasy?: boolean
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "date_ideas_couple_id_fkey"
+            columns: ["couple_id"]
+            isOneToOne: false
+            referencedRelation: "couples"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       memories: {
         Row: {
           couple_id: string
