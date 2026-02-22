@@ -36,7 +36,7 @@ const Notes = () => {
   const [content, setContent] = useState("");
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const { user, profile } = useAuth();
+  const { user, profile, partner } = useAuth();
   const { toast } = useToast();
 
   useEffect(() => {
@@ -160,6 +160,9 @@ const Notes = () => {
             <h3 className="font-semibold text-foreground">{note.title}</h3>
             <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
               {note.content}
+            </p>
+            <p className="text-[10px] text-primary font-medium mt-2">
+              Added by {note.created_by === user?.id ? profile?.display_name : partner?.display_name || "Partner"}
             </p>
           </motion.div>
         ))}

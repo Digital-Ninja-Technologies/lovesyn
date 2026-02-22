@@ -43,7 +43,7 @@ const Memories = () => {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [viewingMemory, setViewingMemory] = useState<Memory | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { user, profile } = useAuth();
+  const { user, profile, partner } = useAuth();
   const { toast } = useToast();
 
   useEffect(() => {
@@ -244,6 +244,9 @@ const Memories = () => {
                   <p className="text-xs text-primary-foreground/70 mt-0.5">
                     {new Date(memory.date).toLocaleDateString()}
                   </p>
+                  <p className="text-[10px] text-primary-foreground/60 mt-0.5">
+                    By {memory.created_by === user?.id ? profile?.display_name : partner?.display_name || "Partner"}
+                  </p>
                 </div>
               </>
             ) : (
@@ -252,6 +255,9 @@ const Memories = () => {
                 <h3 className="font-semibold text-sm text-foreground mt-3">{memory.title}</h3>
                 <p className="text-xs text-muted-foreground mt-0.5">
                   {new Date(memory.date).toLocaleDateString()}
+                </p>
+                <p className="text-[10px] text-primary font-medium mt-1">
+                  By {memory.created_by === user?.id ? profile?.display_name : partner?.display_name || "Partner"}
                 </p>
               </>
             )}
