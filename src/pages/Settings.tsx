@@ -78,8 +78,9 @@ const Settings = () => {
 
       await refreshProfile();
       toast({ title: "Couple photo updated! 💕" });
-    } catch (error: any) {
-      toast({ title: "Upload failed", description: error.message, variant: "destructive" });
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "An error occurred";
+      toast({ title: "Upload failed", description: errorMessage, variant: "destructive" });
     } finally {
       setUploadingCouple(false);
     }
@@ -101,8 +102,9 @@ const Settings = () => {
       await refreshProfile();
       toast({ title: "Profile updated! 💕" });
       navigate("/");
-    } catch (error: any) {
-      toast({ title: "Save failed", description: error.message, variant: "destructive" });
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "An error occurred";
+      toast({ title: "Save failed", description: errorMessage, variant: "destructive" });
     } finally {
       setSaving(false);
     }

@@ -156,7 +156,7 @@ const Chat = () => {
         if (payload.eventType === "INSERT") {
           setReactions((prev) => [...prev, payload.new as Reaction]);
         } else if (payload.eventType === "DELETE") {
-          setReactions((prev) => prev.filter((r) => r.id !== (payload.old as any).id));
+          setReactions((prev) => prev.filter((r) => r.id !== (payload.old as Reaction).id));
         }
       })
       .subscribe();

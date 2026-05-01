@@ -100,13 +100,13 @@ const Dates = () => {
         filter: `couple_id=eq.${profile.couple_id}`,
       }, (payload) => {
         if (payload.eventType === "INSERT") {
-          const newIdea = payload.new as any;
+          const newIdea = payload.new as DateIdea;
           setCustomIdeas((prev) => [{
             ...newIdea,
             creator_name: newIdea.created_by === user?.id ? profile?.display_name : partner?.display_name || "Partner",
           }, ...prev]);
         } else if (payload.eventType === "DELETE") {
-          setCustomIdeas((prev) => prev.filter((i) => i.id !== (payload.old as any).id));
+          setCustomIdeas((prev) => prev.filter((i) => i.id !== (payload.old as DateIdea).id));
         }
       })
       .subscribe();

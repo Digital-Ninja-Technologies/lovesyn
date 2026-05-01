@@ -34,8 +34,9 @@ const Auth = () => {
         description: "We've sent you a password reset link.",
       });
       setIsForgotPassword(false);
-    } catch (error: any) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "An error occurred";
+      toast({ title: "Error", description: errorMessage, variant: "destructive" });
     } finally {
       setLoading(false);
     }
@@ -61,10 +62,11 @@ const Auth = () => {
           description: "Please check your email to verify your account.",
         });
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "An error occurred";
       toast({
         title: "Oops!",
-        description: error.message,
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
