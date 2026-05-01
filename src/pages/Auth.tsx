@@ -5,6 +5,7 @@ import { Heart, Mail, Lock, User, ArrowRight, Loader2, Home } from "lucide-react
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
+import { getOAuthRedirectUrl, getResetPasswordUrl } from "@/lib/redirectUrl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
@@ -26,7 +27,7 @@ const Auth = () => {
     setLoading(true);
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`,
+        redirectTo: getResetPasswordUrl(),
       });
       if (error) throw error;
       toast({
@@ -190,11 +191,25 @@ const Auth = () => {
                   type="button"
                   variant="outline"
                   onClick={async () => {
-                    const { error } = await lovable.auth.signInWithOAuth("google", {
-                      redirect_uri: window.location.origin,
-                    });
-                    if (error) {
-                      toast({ title: "Google sign-in failed", description: error.message, variant: "destructive" });
+                    try {
+                      const { error } = await lovable.auth.signInWithOAuth("google", {
+                        redirect_uri: getOAuthRedirectUrl(),
+                      });
+                      if (error) {
+                        const errorMessage = error instanceof Error ? error.message : "Google sign-in failed";
+                        toast({ 
+                          title: "Google sign-in failed", 
+                          description: errorMessage || "Please check that your domain is whitelisted in Supabase.",
+                          variant: "destructive" 
+                        });
+                      }
+                    } catch (err) {
+                      const errorMessage = err instanceof Error ? err.message : "An unexpected error occurred";
+                      toast({ 
+                        title: "Sign-in error", 
+                        description: errorMessage,
+                        variant: "destructive" 
+                      });
                     }
                   }}
                   className="w-full h-12 rounded-xl font-semibold"
